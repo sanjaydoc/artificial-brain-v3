@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Genesis Chamber — Agent Communication Options</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Kanit:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Poppins', system-ui, sans-serif; background: #ffffff; color: #262626; min-height: 100vh; }
+  h1, h2, h3, h4 { font-family: 'Kanit', system-ui, sans-serif; }
+
+  .header { max-width: 1200px; margin: 0 auto; padding: 40px 24px 20px; }
+  .header h1 { font-size: 28px; font-weight: 700; color: #262626; }
+  .header p { color: #6b7280; font-size: 14px; margin-top: 6px; }
+
+  .options { max-width: 1200px; margin: 0 auto; padding: 0 24px 60px; display: flex; flex-direction: column; gap: 48px; }
+
+  .option { border: 2px solid #e5e7eb; border-radius: 18px; overflow: hidden; transition: border-color 0.2s; }
+  .option:hover { border-color: rgba(59, 130, 246, 0.4); }
+
+  .option-header { padding: 20px 24px; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; gap: 16px; }
+  .option-badge { width: 36px; height: 36px; border-radius: 10px; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); display: grid; place-items: center; color: #3b82f6; font-weight: 800; font-family: 'Kanit'; font-size: 16px; flex-shrink: 0; }
+  .option-title { font-size: 18px; font-weight: 700; color: #262626; }
+  .option-sub { font-size: 13px; color: #6b7280; margin-top: 2px; }
+
+  .canvas-mock { padding: 24px; background: #f8fafc; min-height: 480px; position: relative; overflow: hidden; }
+  .canvas-mock::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(circle, #e2e8f0 1px, transparent 1px); background-size: 24px 24px; pointer-events: none; }
+
+  /* Nodes */
+  .node { position: absolute; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); z-index: 2; font-family: 'Poppins', sans-serif; }
+
+  .agent-node { background: #fff; border: 2px solid #3b82f6; }
+  .agent-node .node-header { background: rgba(59, 130, 246, 0.08); padding: 8px 12px; border-bottom: 1px solid rgba(59, 130, 246, 0.15); display: flex; align-items: center; gap: 8px; border-radius: 10px 10px 0 0; }
+  .agent-node .node-header .dot { width: 8px; height: 8px; border-radius: 50%; background: #3b82f6; }
+  .agent-node .node-header span { font-size: 11px; font-weight: 700; color: #1d4ed8; font-family: 'Kanit'; }
+  .agent-node .node-body { padding: 10px 12px; }
+  .agent-node .node-body .name { font-size: 13px; font-weight: 700; color: #111827; font-family: 'Kanit'; }
+  .agent-node .node-body .desc { font-size: 10px; color: #6b7280; margin-top: 3px; }
+  .agent-node .node-body .status { font-size: 9px; margin-top: 6px; display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+  .status-live { background: rgba(34, 197, 94, 0.1); color: #16a34a; border: 1px solid rgba(34, 197, 94, 0.2); }
+  .status-bg { background: rgba(139, 92, 246, 0.1); color: #7c3aed; border: 1px solid rgba(139, 92, 246, 0.2); }
+  .status-idle { background: rgba(107, 114, 128, 0.1); color: #6b7280; border: 1px solid rgba(107, 114, 128, 0.2); }
+
+  /* Bus node */
+  .bus-node { background: #fff; border: 2px solid #f59e0b; }
+  .bus-node .node-header { background: rgba(245, 158, 11, 0.08); padding: 8px 12px; border-bottom: 1px solid rgba(245, 158, 11, 0.15); display: flex; align-items: center; gap: 8px; border-radius: 10px 10px 0 0; }
+  .bus-node .node-header .dot { width: 8px; height: 8px; border-radius: 50%; background: #f59e0b; }
+  .bus-node .node-header span { font-size: 11px; font-weight: 700; color: #92400e; font-family: 'Kanit'; }
+  .bus-node .node-body { padding: 10px 12px; }
+  .bus-node .node-body .name { font-size: 13px; font-weight: 700; color: #111827; font-family: 'Kanit'; }
+  .bus-node .node-body .desc { font-size: 10px; color: #6b7280; margin-top: 3px; }
+  .bus-node .topic { font-size: 9px; margin-top: 4px; display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; border-radius: 4px; font-weight: 600; background: rgba(245, 158, 11, 0.08); color: #b45309; border: 1px solid rgba(245, 158, 11, 0.2); font-family: 'JetBrains Mono'; }
+
+  /* Wire labels */
+  .wire-label { position: absolute; z-index: 3; font-size: 9px; font-family: 'Kanit'; font-weight: 700; padding: 2px 8px; border-radius: 5px; white-space: nowrap; }
+
+  /* Pros/Cons */
+  .pros-cons { padding: 16px 24px 20px; border-top: 1px solid #e5e7eb; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .pros h4, .cons h4 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  .pros h4 { color: #16a34a; }
+  .cons h4 { color: #ef4444; }
+  .pros li, .cons li { font-size: 12px; color: #4b5563; line-height: 1.6; margin-bottom: 4px; list-style: none; padding-left: 16px; position: relative; }
+  .pros li::before { content: '+'; position: absolute; left: 0; color: #16a34a; font-weight: 700; }
+  .cons li::before { content: '-'; position: absolute; left: 0; color: #ef4444; font-weight: 700; }
+
+  /* Scenario label */
+  .scenario { position: absolute; z-index: 4; background: rgba(59, 130, 246, 0.06); border: 1px solid rgba(59, 130, 246, 0.15); border-radius: 8px; padding: 6px 12px; font-size: 10px; color: #2563eb; font-family: 'Kanit'; font-weight: 600; }
+
+  /* Data packet animation */
+  @keyframes flowRight { 0% { offset-distance: 0%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { offset-distance: 100%; opacity: 0; } }
+  @keyframes flowDown { 0% { offset-distance: 0%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { offset-distance: 100%; opacity: 0; } }
+  .data-dot { width: 6px; height: 6px; border-radius: 50%; background: #3b82f6; position: absolute; z-index: 4; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Genesis Chamber — Agent Communication</h1>
+  <p>How should agents pass data to each other on the canvas?</p>
+</div>
+
+<div class="options">
+
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <!-- OPTION A: Direct Wire -->
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <div class="option">
+    <div class="option-header">
+      <div class="option-badge">A</div>
+      <div>
+        <div class="option-title">Direct Wire</div>
+        <div class="option-sub">Draw a line from Agent A output → Agent B input. Data flows through the wire. Simple, visual.</div>
+      </div>
+    </div>
+
+    <div class="canvas-mock" style="min-height: 500px;">
+      <div class="scenario" style="top: 12px; left: 12px;">Scenario: Customer complaint → Resolve → Generate report</div>
+
+      <!-- Agent 1: Intake -->
+      <div class="agent-node node" style="left: 60px; top: 70px; width: 200px;">
+        <div class="node-header"><div class="dot"></div><span>AGENT</span></div>
+        <div class="node-body">
+          <div class="name">Complaint Intake</div>
+          <div class="desc">Receives customer emails, classifies urgency</div>
+          <div class="status status-live">LIVE</div>
+        </div>
+      </div>
+
+      <!-- Agent 2: Resolver -->
+      <div class="agent-node node" style="left: 370px; top: 70px; width: 200px;">
+        <div class="node-header"><div class="dot"></div><span>AGENT</span></div>
+        <div class="node-body">
+          <div class="name">Issue Resolver</div>
+          <div class="desc">Investigates issue, generates refund or fix</div>
+          <div class="status status-live">LIVE</div>
+        </div>
+      </div>
+
+      <!-- Agent 3: Reporter -->
+      <div class="agent-node node" style="left: 680px; top: 70px; width: 200px;">
+        <div class="node-header"><div class="dot"></div><span>AGENT</span></div>
+        <div class="node-body">
+          <div class="name">Report Generator</div>
+          <div class="desc">Logs resolution, builds weekly summary</div>
+          <div class="status status-bg">BACKGROUND</div>
+        </div>
+      </div>
+
+      <!-- Agent 4: Escalation -->
+      <div class="agent-node node" style="left: 370px; top: 280px; width: 200px;">
+        <div class="node-header"><div class="dot"></div><span>AGENT</span></div>
+        <div class="node-body">
+          <div class="name">Escalation Agent</div>
+          <div class="desc">Flags to human manager when refund &gt; $50</div>
+          <div class="status status-idle">ON-DEMAND</div>
+        </div>
+      </div>
+
+      <!-- Wires -->
+      <svg class="wire-svg" width="100%" height="100%" style="position: absolute; inset: 0; z-index: 1; pointer-events: none;">
+        <!-- Intake → Resolver -->
+        <path d="M 260 120 C 310 120, 330 120, 370 120" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" />
+        <polygon points="367,116 375,120 367,124" fill="#3b82f6" />
+
+        <!-- Resolver → Reporter -->
+        <path d="M 570 120 C 620 120, 640 120, 680 120" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" />
+        <polygon points="677,116 685,120 677,124" fill="#3b82f6" />
+
+        <!-- Resolver → Escalation (conditional) -->
+        <path d="M 470 200 C 470 230, 470 250, 470 280" fill="none" stroke="#ef4444" stroke-width="2" stroke-dasharray="6,4" stroke-linecap="round" />
+        <polygon points="466,277 470,285 474,277" fill="#ef4444" />
+      </svg>
+
+      <!-- Wire labels -->
+      <div class="wire-label" style="left: 290px; top: 100px; background: rgba(59,130,246,0.08); color: #2563eb; border: 1px solid rgba(59,130,246,0.15);">complaint_data</div>
+      <div class="wire-label" style="left: 600px; top: 100px; background: rgba(59,130,246,0.08); color: #2563eb; border: 1px solid rgba(59,130,246,0.15);">resolution</div>
+      <div class="wire-label" style="left: 480px; top: 232px; background: rgba(239,68,68,0.08); color: #ef4444; border: 1px solid rgba(239,68,68,0.15);">if refund &gt; $50</div>
+
+      <!-- Explanation -->
+      <div style="position: absolute; bottom: 14px; left: 14px; z-index: 3; background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 14px; max-width: 500px;">
+        <div style="font-size: 10px; color: #6b7280; font-family: Kanit; font-weight: 700; margin-bottom: 4px;">HOW IT WORKS</div>
+        <div style="font-size: 11px; color: #4b5563; line-height: 1.5;">
+          Each wire carries data directly from one agent's output to another's input. Blue solid = normal flow. Red dashed = conditional branch. Data shape is defined by the source agent.
+        </div>
+      </div>
+    </div>
+
+    <div class="pros-cons">
+      <div class="pros">
+        <h4>Pros</h4>
+        <ul>
+          <li>Simplest mental model — follow the arrows</li>
+          <li>Data flow is immediately visible</li>
+          <li>Easy to build — just edges between nodes</li>
+          <li>Conditional branches with dashed lines</li>
+          <li>Works great for linear pipelines (A → B → C)</li>
+        </ul>
+      </div>
+      <div class="cons">
+        <h4>Cons</h4>
+        <ul>
+          <li>Tightly coupled — Agent B must know Agent A's output shape</li>
+          <li>Gets messy with fan-out (1 agent → 10 listeners)</li>
+          <li>No way to broadcast events to unknown listeners</li>
+          <li>Adding a new agent means rewiring existing connections</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <!-- OPTION B: Message Bus Node -->
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <div class="option">
+    <div class="option-header">
+      <div class="option-badge">B</div>
+      <div>
+        <div class="option-title">Message Bus Node</div>
+        <div class="option-sub">A shared Bus node on canvas. Agents publish events and subscribe to topics. Loosely coupled.</div>
+      </div>
+    </div>
+
+    <div class="canvas-mock" style="min-height: 540px;">
+      <div class="scenario" style="top: 12px; left: 12px;">Scenario: 5 agents listening for "customer_event" topic</div>
+
+      <!-- Central Bus -->
+      <div class="bus-node node" style="left: 340px; top: 180px; width: 220px;">
+        <div class="node-header"><div class="dot"></div><span>MESSAGE BUS</span></div>
+        <div class="node-body">
+          <div class="name">Event Bus</div>
+          <div class="desc">Pub/sub message router</div>
+          <div style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px;">
+            <span class="topic">customer_event</span>
+            <span class="topic">refund_approved</span>
+            <span class="topic">report_ready</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Publishers (left side) -->
+      <div class="agent-node node" style="left: 40px; top: 60px; width: 190px;">
+        <div class="node-header"><div class="dot"></div><span>PUBLISHER</span></div>
+        <div class="node-body">
+          <div class="name">Complaint Intake</div>
+          <div class="desc">Publishes to customer_event</div>
+          <div class="status status-live">LIVE</div>
+        </div>
+      </div>
+
+      <div class="agent-node node" style="left: 40px; top: 320px; width: 190px;">
+        <div class="node-header"><div class="dot"></div><span>PUBLISHER</span></div>
+        <div class="node-body">
+          <div class="name">Issue Resolver</div>
+          <div class="desc">Publishes to refund_approved</div>
+          <div class="status status-live">LIVE</div>
+        </div>
+      </div>
+
+      <!-- Subscribers (right side) -->
+      <div class="agent-node node" style="left: 670px; top: 30px; width: 190px;">
+        <div class="node-header"><div class="dot"></div><span>SUBSCRIBER</span></div>
+        <div class="node-body">
+          <div class="name">CRM Updater</div>
+          <div class="desc">Listens: customer_event</div>
+          <div class="status status-bg">BACKGROUND</div>
+        </div>
+      </div>
+
+      <div class="agent-node node" style="left: 670px; top: 160px; width: 190px;">
+        <div class="node-header"><div class="dot"></div><span>SUBSCRIBER</span></div>
+        <div class="node-body">
+          <div class="name">Analytics Agent</div>
+          <div class="desc">Listens: customer_event</div>
+          <div class="status status-bg">BACKGROUND</div>
+        </div>
+      </div>
+
+      <div class="agent-node node" style="left: 670px; top: 290px; width: 190px;">
+        <div class="node-header"><div class="dot"></div><span>SUBSCRIBER</span></div>
+        <div class="node-body">
+          <div class="name">Report Generator</div>
+          <div class="desc">Listens: refund_approved</div>
+          <div class="status status-bg">BACKGROUND</div>
+        </div>
+      </div>
+
+      <div class="agent-node node" style="left: 670px; top: 420px; width: 190px;">
+        <div class="node-header"><div class="dot"></div><span>SUBSCRIBER</span></div>
+        <div class="node-body">
+          <div class="name">Escalation Agent</div>
+          <div class="desc">Listens: refund_approved</div>
+          <div class="status status-idle">ON-DEMAND</div>
+        </div>
+      </div>
+
+      <!-- Wires: Publishers → Bus -->
+      <svg class="wire-svg" width="100%" height="100%" style="position: absolute; inset: 0; z-index: 1; pointer-events: none;">
+        <!-- Intake → Bus -->
+        <path d="M 230 110 C 280 110, 300 230, 340 230" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" />
+        <polygon points="337,226 345,230 337,234" fill="#f59e0b" />
+
+        <!-- Resolver → Bus -->
+        <path d="M 230 370 C 280 370, 300 260, 340 260" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" />
+        <polygon points="337,256 345,260 337,264" fill="#f59e0b" />
+
+        <!-- Bus → CRM -->
+        <path d="M 560 220 C 610 220, 640 80, 670 80" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" />
+        <polygon points="667,76 675,80 667,84" fill="#22c55e" />
+
+        <!-- Bus → Analytics -->
+        <path d="M 560 230 C 610 230, 640 210, 670 210" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" />
+        <polygon points="667,206 675,210 667,214" fill="#22c55e" />
+
+        <!-- Bus → Report -->
+        <path d="M 560 250 C 610 250, 640 340, 670 340" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" />
+        <polygon points="667,336 675,340 667,344" fill="#22c55e" />
+
+        <!-- Bus → Escalation -->
+        <path d="M 560 260 C 610 260, 640 470, 670 470" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" />
+        <polygon points="667,466 675,470 667,474" fill="#22c55e" />
+      </svg>
+
+      <!-- Labels -->
+      <div class="wire-label" style="left: 258px; top: 148px; background: rgba(245,158,11,0.08); color: #b45309; border: 1px solid rgba(245,158,11,0.15);">publish</div>
+      <div class="wire-label" style="left: 258px; top: 344px; background: rgba(245,158,11,0.08); color: #b45309; border: 1px solid rgba(245,158,11,0.15);">publish</div>
+      <div class="wire-label" style="left: 604px; top: 148px; background: rgba(34,197,94,0.08); color: #16a34a; border: 1px solid rgba(34,197,94,0.15);">subscribe</div>
+
+      <!-- Explanation -->
+      <div style="position: absolute; bottom: 14px; left: 14px; z-index: 3; background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 14px; max-width: 500px;">
+        <div style="font-size: 10px; color: #6b7280; font-family: Kanit; font-weight: 700; margin-bottom: 4px;">HOW IT WORKS</div>
+        <div style="font-size: 11px; color: #4b5563; line-height: 1.5;">
+          Publishers push events to the Bus with a topic name. Subscribers wire to the Bus and declare which topics they listen to. Adding a new listener doesn't require changing any existing agent — just wire it to the Bus. Orange = publish, Green = subscribe.
+        </div>
+      </div>
+    </div>
+
+    <div class="pros-cons">
+      <div class="pros">
+        <h4>Pros</h4>
+        <ul>
+          <li>Loosely coupled — agents don't know about each other</li>
+          <li>Easy fan-out — one event, many listeners</li>
+          <li>Adding new agents doesn't rewire existing ones</li>
+          <li>Topic-based filtering is powerful</li>
+          <li>Scales well for event-driven architectures</li>
+        </ul>
+      </div>
+      <div class="cons">
+        <h4>Cons</h4>
+        <ul>
+          <li>Extra node on canvas (Bus) — more visual overhead</li>
+          <li>Harder to trace exact data flow (pub/sub is implicit)</li>
+          <li>Overkill for simple 2-agent "A triggers B" flows</li>
+          <li>Topic naming requires discipline</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <!-- OPTION C: Both — Direct + Bus -->
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <div class="option">
+    <div class="option-header">
+      <div class="option-badge">C</div>
+      <div>
+        <div class="option-title">Both — Direct Wire + Bus Node</div>
+        <div class="option-sub">Direct wires for simple chains, Bus node available for fan-out/event-driven flows. User picks per case.</div>
+      </div>
+    </div>
+
+    <div class="canvas-mock" style="min-height: 560px;">
+      <div class="scenario" style="top: 12px; left: 12px;">Scenario: Mixed — linear pipeline (left) + event fan-out (right)</div>
+
+      <!-- LEFT SIDE: Direct wire chain -->
+      <div style="position: absolute; left: 20px; top: 52px; z-index: 3; font-size: 9px; color: #2563eb; font-family: Kanit; font-weight: 700; background: rgba(59,130,246,0.06); border: 1px solid rgba(59,130,246,0.12); border-radius: 6px; padding: 3px 10px;">DIRECT WIRES</div>
+
+      <div class="agent-node node" style="left: 30px; top: 80px; width: 180px;">
+        <div class="node-header"><div class="dot"></div><span>AGENT</span></div>
+        <div class="node-body">
+          <div class="name">Email Parser</div>
+          <div class="desc">Extracts complaint details</div>
+          <div class="status status-live">LIVE</div>
+        </div>
+      </div>
+
+      <div class="agent-node node" style="left: 30px; top: 230px; width: 180px;">
+        <div class="node-header"><div class="dot"></div><span>AGENT</span></div>
+        <div class="node-body">
+          <div class="name">Issue Classifier</div>
+          <div class="desc">Categorises: billing, shipping, product</div>
+          <div class="status status-live">LIVE</div>
+        </div>
+      </div>
+
+      <div class="agent-node node" style="left: 30px; top: 380px; width: 180px;">
+        <div class="node-header"><div class="dot"></div><span>AGENT</span></div>
+        <div class="node-body">
+          <div class="name">Auto Resolver</div>
+          <div class="desc">Resolves common issues automatically</div>
+          <div class="status status-live">LIVE</div>
+        </div>
+      </div>
+
+      <!-- RIGHT SIDE: Bus fan-out -->
+      <div style="position: absolute; left: 390px; top: 52px; z-index: 3; font-size: 9px; color: #b45309; font-family: Kanit; font-weight: 700; background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.12); border-radius: 6px; padding: 3px 10px;">EVENT BUS</div>
+
+      <!-- Bus node -->
+      <div class="bus-node node" style="left: 380px; top: 230px; width: 180px;">
+        <div class="node-header"><div class="dot"></div><span>MESSAGE BUS</span></div>
+        <div class="node-body">
+          <div class="name">Resolution Bus</div>
+          <div class="desc">Fan-out resolution events</div>
+          <div style="margin-top: 6px; display: flex; flex-wrap: wrap; gap: 3px;">
+            <span class="topic">resolved</span>
+            <span class="topic">escalated</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Subscribers -->
+      <div class="agent-node node" style="left: 670px; top: 80px; width: 180px;">
+        <div class="node-header"><div class="dot"></div><span>SUBSCRIBER</span></div>
+        <div class="node-body">
+          <div class="name">CRM Logger</div>
+          <div class="desc">Updates customer record</div>
+          <div class="status status-bg">BACKGROUND</div>
+        </div>
+      </div>
+
+      <div class="agent-node node" style="left: 670px; top: 230px; width: 180px;">
+        <div class="node-header"><div class="dot"></div><span>SUBSCRIBER</span></div>
+        <div class="node-body">
+          <div class="name">Satisfaction Survey</div>
+          <div class="desc">Sends follow-up survey</div>
+          <div class="status status-bg">BACKGROUND</div>
+        </div>
+      </div>
+
+      <div class="agent-node node" style="left: 670px; top: 380px; width: 180px;">
+        <div class="node-header"><div class="dot"></div><span>SUBSCRIBER</span></div>
+        <div class="node-body">
+          <div class="name">Analytics</div>
+          <div class="desc">Tracks resolution metrics</div>
+          <div class="status status-bg">BACKGROUND</div>
+        </div>
+      </div>
+
+      <!-- Wires -->
+      <svg class="wire-svg" width="100%" height="100%" style="position: absolute; inset: 0; z-index: 1; pointer-events: none;">
+        <!-- Direct: Parser → Classifier -->
+        <path d="M 120 200 C 120 210, 120 220, 120 230" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" />
+        <polygon points="116,227 120,235 124,227" fill="#3b82f6" />
+
+        <!-- Direct: Classifier → Resolver -->
+        <path d="M 120 350 C 120 360, 120 370, 120 380" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" />
+        <polygon points="116,377 120,385 124,377" fill="#3b82f6" />
+
+        <!-- Direct: Resolver → Bus (publish) -->
+        <path d="M 210 430 C 280 430, 320 290, 380 290" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" />
+        <polygon points="377,286 385,290 377,294" fill="#f59e0b" />
+
+        <!-- Bus → CRM -->
+        <path d="M 560 270 C 610 270, 640 130, 670 130" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" />
+        <polygon points="667,126 675,130 667,134" fill="#22c55e" />
+
+        <!-- Bus → Survey -->
+        <path d="M 560 280 C 610 280, 640 280, 670 280" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" />
+        <polygon points="667,276 675,280 667,284" fill="#22c55e" />
+
+        <!-- Bus → Analytics -->
+        <path d="M 560 290 C 610 290, 640 430, 670 430" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" />
+        <polygon points="667,426 675,430 667,434" fill="#22c55e" />
+      </svg>
+
+      <!-- Wire labels -->
+      <div class="wire-label" style="left: 126px; top: 206px; background: rgba(59,130,246,0.08); color: #2563eb; border: 1px solid rgba(59,130,246,0.15);">parsed_data</div>
+      <div class="wire-label" style="left: 126px; top: 356px; background: rgba(59,130,246,0.08); color: #2563eb; border: 1px solid rgba(59,130,246,0.15);">classified</div>
+      <div class="wire-label" style="left: 268px; top: 408px; background: rgba(245,158,11,0.08); color: #b45309; border: 1px solid rgba(245,158,11,0.15);">publish: resolved</div>
+
+      <!-- Explanation -->
+      <div style="position: absolute; bottom: 14px; left: 14px; z-index: 3; background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 14px; max-width: 620px;">
+        <div style="font-size: 10px; color: #6b7280; font-family: Kanit; font-weight: 700; margin-bottom: 4px;">HOW IT WORKS</div>
+        <div style="font-size: 11px; color: #4b5563; line-height: 1.5;">
+          <strong>Left side:</strong> Simple linear chain uses direct blue wires — Email Parser → Classifier → Resolver. No bus needed.<br/>
+          <strong>Right side:</strong> Once resolved, the Resolver publishes to the Bus. Three background agents subscribe without knowing about each other.<br/>
+          <strong>Best of both:</strong> Use direct wires for deterministic pipelines, Bus for event fan-out. User decides per connection.
+        </div>
+      </div>
+    </div>
+
+    <div class="pros-cons">
+      <div class="pros">
+        <h4>Pros</h4>
+        <ul>
+          <li>Maximum flexibility — right tool for each connection</li>
+          <li>Simple flows stay simple (direct wire)</li>
+          <li>Complex fan-out stays clean (Bus)</li>
+          <li>Matches real-world patterns — most systems use both</li>
+          <li>No forced complexity on simple use cases</li>
+        </ul>
+      </div>
+      <div class="cons">
+        <h4>Cons</h4>
+        <ul>
+          <li>Two connection types to learn (wire vs bus)</li>
+          <li>More complex canvas implementation</li>
+          <li>User needs to decide which pattern to use</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

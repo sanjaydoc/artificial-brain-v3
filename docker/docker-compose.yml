@@ -1,0 +1,119 @@
+# Artificial Brain v3 — Docker Compose (Tunnel Services Only)
+# Serves: Ollama (4 models) + Neo4j + MuJoCo Sim + Cerebellum RL
+# All exposed via Cloudflare Tunnel at *.klabs.network
+#
+# Usage:
+#   cd docker
+#   cp .env.example .env   # fill in tokens
+#   docker compose up -d
+
+services:
+  # ── LLM Models ──────────────────────────────────────────────────────────────
+  ollama:
+    image: ollama/ollama
+    container_name: ab_ollama
+    restart: unless-stopped
+    volumes:
+      - ollama-models:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    networks:
+      - ab_net
+
+  # ── Knowledge Graph + Episodic Memory ───────────────────────────────────────
+  neo4j:
+    image: neo4j:5
+    container_name: ab_neo4j
+    restart: unless-stopped
+    environment:
+      NEO4J_AUTH: neo4j/${NEO4J_PASSWORD:-brain_password}
+      NEO4J_PLUGINS: '[]'
+    ports:
+      - "7474:7474"   # Browser UI (local access)
+      - "7687:7687"   # Bolt protocol (local access)
+    volumes:
+      - neo4j-data:/data
+    healthcheck:
+      test: ["CMD", "cypher-shell", "-u", "neo4j", "-p", "${NEO4J_PASSWORD:-brain_password}", "RETURN 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - ab_net
+
+  # ── MuJoCo Simulator (Unitree G1 Humanoid) ─────────────────────────────────
+  sim:
+    image: artificial-brain-sim:latest
+    container_name: ab_sim
+    restart: unless-stopped
+    environment:
+      USE_G1_XML: "true"
+      SIM_HZ: "20"
+    ports:
+      - "9091:8091"   # Sim API (local access)
+    networks:
+      - ab_net
+
+  # ── Cerebellum RL (SmolVLA + REINFORCE) ─────────────────────────────────────
+  cerebellum-rl:
+    image: artificial-brain-rl:latest
+    container_name: ab_rl
+    restart: unless-stopped
+    environment:
+      SIM_URL: http://sim:8091
+    ports:
+      - "9092:8092"   # RL API (local access)
+    depends_on:
+      - sim
+    networks:
+      - ab_net
+
+  # ── Auth Gate (Caddy) ──────────────────────────────────────────────────────
+  caddy:
+    image: caddy:2-alpine
+    container_name: ab_caddy
+    restart: unless-stopped
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+    environment:
+      AUTH_TOKEN: ${AUTH_TOKEN}
+    ports:
+      - "11435:80"    # Ollama gate (local)
+      - "11436:81"    # Neo4j gate (local)
+      - "11437:82"    # Sim gate (local)
+      - "11438:83"    # RL gate (local)
+    depends_on:
+      - ollama
+      - neo4j
+      - sim
+      - cerebellum-rl
+    networks:
+      - ab_net
+
+  # ── Cloudflare Tunnel ──────────────────────────────────────────────────────
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: ab_tunnel
+    restart: unless-stopped
+    command: tunnel run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARED_TOKEN}
+    depends_on:
+      - caddy
+    networks:
+      - ab_net
+
+volumes:
+  ollama-models:
+    name: ab-ollama-models
+  neo4j-data:
+    name: ab-neo4j-data
+
+networks:
+  ab_net:
+    name: ab_net

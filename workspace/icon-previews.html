@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Icon Style Preview — Artificial Brain v3</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/duotone/style.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0">
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0a0a0a; color: #e7e9ea; }
+  h1 { text-align:center; padding:30px 0 10px; font-size:24px; color:#1c9cf0; }
+  p.sub { text-align:center; color:#72767a; font-size:13px; margin-bottom:30px; }
+  .section { max-width:1100px; margin:0 auto 40px; padding:0 20px; }
+  .section h2 { font-size:16px; color:#e7e9ea; margin-bottom:6px; display:flex; align-items:center; gap:10px; }
+  .section h2 span.num { background:#1c9cf0; color:#fff; font-size:11px; font-weight:700; width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; }
+  .section h2 span.tag { font-size:11px; color:#72767a; font-weight:400; margin-left:auto; }
+  .section p.desc { font-size:12px; color:#72767a; margin-bottom:14px; }
+  .grid { display:flex; gap:12px; flex-wrap:wrap; padding:16px; background:#17181c; border-radius:16px; border:1px solid #242628; }
+  .grid.light { background:#ffffff; border-color:#e1eaef; }
+
+  /* Shared tile */
+  .tile { display:flex; flex-direction:column; align-items:center; gap:6px; width:72px; }
+  .tile .label { font-size:9px; color:#72767a; text-align:center; line-height:1.2; }
+  .light .tile .label { color:#536471; }
+
+  /* Option 1: Lucide */
+  .lucide-icon { width:28px; height:28px; }
+
+  /* Option 2: Tabler */
+  .tabler-icon { font-size:28px; }
+
+  /* Option 3: Phosphor */
+  .phosphor-icon { font-size:28px; }
+
+  /* Option 4: Material */
+  .material-symbols-rounded { font-family:'Material Symbols Rounded'; font-size:28px; font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24; }
+
+  /* Option 5: Glass tiles */
+  .glass-tile { width:56px; height:56px; display:flex; align-items:center; justify-content:center; border-radius:14px; background:rgba(255,255,255,0.07); backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.1); box-shadow:0 4px 12px rgba(0,0,0,0.3); transition:transform 0.2s; }
+  .glass-tile:hover { transform:scale(1.1); background:rgba(255,255,255,0.13); }
+  .light .glass-tile { background:rgba(0,0,0,0.04); border-color:rgba(0,0,0,0.08); box-shadow:0 2px 8px rgba(0,0,0,0.08); }
+  .light .glass-tile:hover { background:rgba(0,0,0,0.08); }
+
+  /* Dividers */
+  .divider { height:1px; background:#242628; max-width:1100px; margin:0 auto 30px; }
+  .mode-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:2px; color:#72767a; margin-bottom:10px; padding-left:4px; }
+</style>
+</head>
+<body>
+
+<h1>Icon Style Preview</h1>
+<p class="sub">6 icon styles for Artificial Brain v3 Desktop View — each shown in dark + light mode</p>
+
+<!-- ═══════════ OPTION 1: LUCIDE ═══════════ -->
+<div class="section">
+  <h2><span class="num">1</span> Lucide Icons — Clean Minimal <span class="tag">Already in project • ISC License • 1,500+ icons</span></h2>
+  <p class="desc">Thin outlined, minimal. Same library you already use. Just CSS color swap for light/dark.</p>
+  <p class="mode-label">Dark Mode</p>
+  <div class="grid">
+    <div class="tile"><i data-lucide="message-circle" class="lucide-icon" style="color:#1c9cf0"></i><span class="label">Chat</span></div>
+    <div class="tile"><i data-lucide="settings" class="lucide-icon" style="color:#1c9cf0"></i><span class="label">Config</span></div>
+    <div class="tile"><i data-lucide="brain" class="lucide-icon" style="color:#1c9cf0"></i><span class="label">Neural Map</span></div>
+    <div class="tile"><i data-lucide="bot" class="lucide-icon" style="color:#1c9cf0"></i><span class="label">Robot</span></div>
+    <div class="tile"><i data-lucide="building-2" class="lucide-icon" style="color:#1c9cf0"></i><span class="label">Businesses</span></div>
+    <div class="tile"><i data-lucide="lightbulb" class="lucide-icon" style="color:#1c9cf0"></i><span class="label">Inventor</span></div>
+    <div class="tile"><i data-lucide="cpu" class="lucide-icon" style="color:#1c9cf0"></i><span class="label">Electronics</span></div>
+    <div class="tile"><i data-lucide="terminal" class="lucide-icon" style="color:#1c9cf0"></i><span class="label">Commands</span></div>
+    <div class="tile"><i data-lucide="database" class="lucide-icon" style="color:#1c9cf0"></i><span class="label">Memory</span></div>
+    <div class="tile"><i data-lucide="sparkles" class="lucide-icon" style="color:#1c9cf0"></i><span class="label">Genesis</span></div>
+    <div class="tile"><i data-lucide="git-branch" class="lucide-icon" style="color:#1c9cf0"></i><span class="label">Orchestrator</span></div>
+    <div class="tile"><i data-lucide="hard-drive" class="lucide-icon" style="color:#1c9cf0"></i><span class="label">Memory Cfg</span></div>
+    <div class="tile"><i data-lucide="wrench" class="lucide-icon" style="color:#1c9cf0"></i><span class="label">Tools Cfg</span></div>
+    <div class="tile"><i data-lucide="fingerprint" class="lucide-icon" style="color:#1c9cf0"></i><span class="label">Identity</span></div>
+    <div class="tile"><i data-lucide="eye" class="lucide-icon" style="color:#1c9cf0"></i><span class="label">Observability</span></div>
+    <div class="tile"><i data-lucide="shield-check" class="lucide-icon" style="color:#1c9cf0"></i><span class="label">Guardrails</span></div>
+  </div>
+  <br>
+  <p class="mode-label">Light Mode</p>
+  <div class="grid light">
+    <div class="tile"><i data-lucide="message-circle" class="lucide-icon" style="color:#1e9df1"></i><span class="label">Chat</span></div>
+    <div class="tile"><i data-lucide="settings" class="lucide-icon" style="color:#1e9df1"></i><span class="label">Config</span></div>
+    <div class="tile"><i data-lucide="brain" class="lucide-icon" style="color:#1e9df1"></i><span class="label">Neural Map</span></div>
+    <div class="tile"><i data-lucide="bot" class="lucide-icon" style="color:#1e9df1"></i><span class="label">Robot</span></div>
+    <div class="tile"><i data-lucide="building-2" class="lucide-icon" style="color:#1e9df1"></i><span class="label">Businesses</span></div>
+    <div class="tile"><i data-lucide="lightbulb" class="lucide-icon" style="color:#1e9df1"></i><span class="label">Inventor</span></div>
+    <div class="tile"><i data-lucide="cpu" class="lucide-icon" style="color:#1e9df1"></i><span class="label">Electronics</span></div>
+    <div class="tile"><i data-lucide="terminal" class="lucide-icon" style="color:#1e9df1"></i><span class="label">Commands</span></div>
+    <div class="tile"><i data-lucide="database" class="lucide-icon" style="color:#1e9df1"></i><span class="label">Memory</span></div>
+    <div class="tile"><i data-lucide="sparkles" class="lucide-icon" style="color:#1e9df1"></i><span class="label">Genesis</span></div>
+    <div class="tile"><i data-lucide="git-branch" class="lucide-icon" style="color:#1e9df1"></i><span class="label">Orchestrator</span></div>
+    <div class="tile"><i data-lucide="hard-drive" class="lucide-icon" style="color:#1e9df1"></i><span class="label">Memory Cfg</span></div>
+    <div class="tile"><i data-lucide="wrench" class="lucide-icon" style="color:#1e9df1"></i><span class="label">Tools Cfg</span></div>
+    <div class="tile"><i data-lucide="fingerprint" class="lucide-icon" style="color:#1e9df1"></i><span class="label">Identity</span></div>
+    <div class="tile"><i data-lucide="eye" class="lucide-icon" style="color:#1e9df1"></i><span class="label">Observability</span></div>
+    <div class="tile"><i data-lucide="shield-check" class="lucide-icon" style="color:#1e9df1"></i><span class="label">Guardrails</span></div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ═══════════ OPTION 2: TABLER ═══════════ -->
+<div class="section">
+  <h2><span class="num">2</span> Tabler Icons — Modern Outlined <span class="tag">MIT License • 6,100+ icons</span></h2>
+  <p class="desc">Slightly thicker strokes than Lucide. More visible at smaller sizes. Very Heroicons-like.</p>
+  <p class="mode-label">Dark Mode</p>
+  <div class="grid">
+    <div class="tile"><i class="ti ti-message tabler-icon" style="color:#34d399"></i><span class="label">Chat</span></div>
+    <div class="tile"><i class="ti ti-settings tabler-icon" style="color:#34d399"></i><span class="label">Config</span></div>
+    <div class="tile"><i class="ti ti-brain tabler-icon" style="color:#34d399"></i><span class="label">Neural Map</span></div>
+    <div class="tile"><i class="ti ti-robot tabler-icon" style="color:#34d399"></i><span class="label">Robot</span></div>
+    <div class="tile"><i class="ti ti-building tabler-icon" style="color:#34d399"></i><span class="label">Businesses</span></div>
+    <div class="tile"><i class="ti ti-bulb tabler-icon" style="color:#34d399"></i><span class="label">Inventor</span></div>
+    <div class="tile"><i class="ti ti-circuit-board tabler-icon" style="color:#34d399"></i><span class="label">Electronics</span></div>
+    <div class="tile"><i class="ti ti-terminal-2 tabler-icon" style="color:#34d399"></i><span class="label">Commands</span></div>
+    <div class="tile"><i class="ti ti-database tabler-icon" style="color:#34d399"></i><span class="label">Memory</span></div>
+    <div class="tile"><i class="ti ti-atom tabler-icon" style="color:#34d399"></i><span class="label">Genesis</span></div>
+    <div class="tile"><i class="ti ti-arrows-shuffle tabler-icon" style="color:#34d399"></i><span class="label">Orchestrator</span></div>
+    <div class="tile"><i class="ti ti-server tabler-icon" style="color:#34d399"></i><span class="label">Memory Cfg</span></div>
+    <div class="tile"><i class="ti ti-tool tabler-icon" style="color:#34d399"></i><span class="label">Tools Cfg</span></div>
+    <div class="tile"><i class="ti ti-id tabler-icon" style="color:#34d399"></i><span class="label">Identity</span></div>
+    <div class="tile"><i class="ti ti-eye tabler-icon" style="color:#34d399"></i><span class="label">Observability</span></div>
+    <div class="tile"><i class="ti ti-shield-check tabler-icon" style="color:#34d399"></i><span class="label">Guardrails</span></div>
+  </div>
+  <br>
+  <p class="mode-label">Light Mode</p>
+  <div class="grid light">
+    <div class="tile"><i class="ti ti-message tabler-icon" style="color:#059669"></i><span class="label">Chat</span></div>
+    <div class="tile"><i class="ti ti-settings tabler-icon" style="color:#059669"></i><span class="label">Config</span></div>
+    <div class="tile"><i class="ti ti-brain tabler-icon" style="color:#059669"></i><span class="label">Neural Map</span></div>
+    <div class="tile"><i class="ti ti-robot tabler-icon" style="color:#059669"></i><span class="label">Robot</span></div>
+    <div class="tile"><i class="ti ti-building tabler-icon" style="color:#059669"></i><span class="label">Businesses</span></div>
+    <div class="tile"><i class="ti ti-bulb tabler-icon" style="color:#059669"></i><span class="label">Inventor</span></div>
+    <div class="tile"><i class="ti ti-circuit-board tabler-icon" style="color:#059669"></i><span class="label">Electronics</span></div>
+    <div class="tile"><i class="ti ti-terminal-2 tabler-icon" style="color:#059669"></i><span class="label">Commands</span></div>
+    <div class="tile"><i class="ti ti-database tabler-icon" style="color:#059669"></i><span class="label">Memory</span></div>
+    <div class="tile"><i class="ti ti-atom tabler-icon" style="color:#059669"></i><span class="label">Genesis</span></div>
+    <div class="tile"><i class="ti ti-arrows-shuffle tabler-icon" style="color:#059669"></i><span class="label">Orchestrator</span></div>
+    <div class="tile"><i class="ti ti-server tabler-icon" style="color:#059669"></i><span class="label">Memory Cfg</span></div>
+    <div class="tile"><i class="ti ti-tool tabler-icon" style="color:#059669"></i><span class="label">Tools Cfg</span></div>
+    <div class="tile"><i class="ti ti-id tabler-icon" style="color:#059669"></i><span class="label">Identity</span></div>
+    <div class="tile"><i class="ti ti-eye tabler-icon" style="color:#059669"></i><span class="label">Observability</span></div>
+    <div class="tile"><i class="ti ti-shield-check tabler-icon" style="color:#059669"></i><span class="label">Guardrails</span></div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ═══════════ OPTION 3: PHOSPHOR DUOTONE ═══════════ -->
+<div class="section">
+  <h2><span class="num">3</span> Phosphor Duotone — Two-Tone Depth <span class="tag">MIT License • 9,000+ icons</span></h2>
+  <p class="desc">Stroke + semi-transparent fill. Adds visual depth that makes icons feel like real app icons.</p>
+  <p class="mode-label">Dark Mode</p>
+  <div class="grid">
+    <div class="tile"><i class="ph-duotone ph-chat-circle phosphor-icon" style="color:#a78bfa"></i><span class="label">Chat</span></div>
+    <div class="tile"><i class="ph-duotone ph-gear phosphor-icon" style="color:#a78bfa"></i><span class="label">Config</span></div>
+    <div class="tile"><i class="ph-duotone ph-brain phosphor-icon" style="color:#a78bfa"></i><span class="label">Neural Map</span></div>
+    <div class="tile"><i class="ph-duotone ph-robot phosphor-icon" style="color:#a78bfa"></i><span class="label">Robot</span></div>
+    <div class="tile"><i class="ph-duotone ph-buildings phosphor-icon" style="color:#a78bfa"></i><span class="label">Businesses</span></div>
+    <div class="tile"><i class="ph-duotone ph-lightbulb phosphor-icon" style="color:#a78bfa"></i><span class="label">Inventor</span></div>
+    <div class="tile"><i class="ph-duotone ph-cpu phosphor-icon" style="color:#a78bfa"></i><span class="label">Electronics</span></div>
+    <div class="tile"><i class="ph-duotone ph-terminal-window phosphor-icon" style="color:#a78bfa"></i><span class="label">Commands</span></div>
+    <div class="tile"><i class="ph-duotone ph-database phosphor-icon" style="color:#a78bfa"></i><span class="label">Memory</span></div>
+    <div class="tile"><i class="ph-duotone ph-atom phosphor-icon" style="color:#a78bfa"></i><span class="label">Genesis</span></div>
+    <div class="tile"><i class="ph-duotone ph-flow-arrow phosphor-icon" style="color:#a78bfa"></i><span class="label">Orchestrator</span></div>
+    <div class="tile"><i class="ph-duotone ph-hard-drives phosphor-icon" style="color:#a78bfa"></i><span class="label">Memory Cfg</span></div>
+    <div class="tile"><i class="ph-duotone ph-wrench phosphor-icon" style="color:#a78bfa"></i><span class="label">Tools Cfg</span></div>
+    <div class="tile"><i class="ph-duotone ph-fingerprint phosphor-icon" style="color:#a78bfa"></i><span class="label">Identity</span></div>
+    <div class="tile"><i class="ph-duotone ph-binoculars phosphor-icon" style="color:#a78bfa"></i><span class="label">Observability</span></div>
+    <div class="tile"><i class="ph-duotone ph-shield-check phosphor-icon" style="color:#a78bfa"></i><span class="label">Guardrails</span></div>
+  </div>
+  <br>
+  <p class="mode-label">Light Mode</p>
+  <div class="grid light">
+    <div class="tile"><i class="ph-duotone ph-chat-circle phosphor-icon" style="color:#7c3aed"></i><span class="label">Chat</span></div>
+    <div class="tile"><i class="ph-duotone ph-gear phosphor-icon" style="color:#7c3aed"></i><span class="label">Config</span></div>
+    <div class="tile"><i class="ph-duotone ph-brain phosphor-icon" style="color:#7c3aed"></i><span class="label">Neural Map</span></div>
+    <div class="tile"><i class="ph-duotone ph-robot phosphor-icon" style="color:#7c3aed"></i><span class="label">Robot</span></div>
+    <div class="tile"><i class="ph-duotone ph-buildings phosphor-icon" style="color:#7c3aed"></i><span class="label">Businesses</span></div>
+    <div class="tile"><i class="ph-duotone ph-lightbulb phosphor-icon" style="color:#7c3aed"></i><span class="label">Inventor</span></div>
+    <div class="tile"><i class="ph-duotone ph-cpu phosphor-icon" style="color:#7c3aed"></i><span class="label">Electronics</span></div>
+    <div class="tile"><i class="ph-duotone ph-terminal-window phosphor-icon" style="color:#7c3aed"></i><span class="label">Commands</span></div>
+    <div class="tile"><i class="ph-duotone ph-database phosphor-icon" style="color:#7c3aed"></i><span class="label">Memory</span></div>
+    <div class="tile"><i class="ph-duotone ph-atom phosphor-icon" style="color:#7c3aed"></i><span class="label">Genesis</span></div>
+    <div class="tile"><i class="ph-duotone ph-flow-arrow phosphor-icon" style="color:#7c3aed"></i><span class="label">Orchestrator</span></div>
+    <div class="tile"><i class="ph-duotone ph-hard-drives phosphor-icon" style="color:#7c3aed"></i><span class="label">Memory Cfg</span></div>
+    <div class="tile"><i class="ph-duotone ph-wrench phosphor-icon" style="color:#7c3aed"></i><span class="label">Tools Cfg</span></div>
+    <div class="tile"><i class="ph-duotone ph-fingerprint phosphor-icon" style="color:#7c3aed"></i><span class="label">Identity</span></div>
+    <div class="tile"><i class="ph-duotone ph-binoculars phosphor-icon" style="color:#7c3aed"></i><span class="label">Observability</span></div>
+    <div class="tile"><i class="ph-duotone ph-shield-check phosphor-icon" style="color:#7c3aed"></i><span class="label">Guardrails</span></div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ═══════════ OPTION 4: MATERIAL SYMBOLS ═══════════ -->
+<div class="section">
+  <h2><span class="num">4</span> Material Symbols Filled — Corporate Solid <span class="tag">Apache 2.0 • 3,400+ icons</span></h2>
+  <p class="desc">Google's variable font. Solid filled, universally recognized. Most corporate/enterprise feel.</p>
+  <p class="mode-label">Dark Mode</p>
+  <div class="grid">
+    <div class="tile"><span class="material-symbols-rounded" style="color:#f472b6">chat</span><span class="label">Chat</span></div>
+    <div class="tile"><span class="material-symbols-rounded" style="color:#f472b6">settings</span><span class="label">Config</span></div>
+    <div class="tile"><span class="material-symbols-rounded" style="color:#f472b6">neurology</span><span class="label">Neural Map</span></div>
+    <div class="tile"><span class="material-symbols-rounded" style="color:#f472b6">smart_toy</span><span class="label">Robot</span></div>
+    <div class="tile"><span class="material-symbols-rounded" style="color:#f472b6">business</span><span class="label">Businesses</span></div>
+    <div class="tile"><span class="material-symbols-rounded" style="color:#f472b6">lightbulb</span><span class="label">Inventor</span></div>
+    <div class="tile"><span class="material-symbols-rounded" style="color:#f472b6">memory</span><span class="label">Electronics</span></div>
+    <div class="tile"><span class="material-symbols-rounded" style="color:#f472b6">terminal</span><span class="label">Commands</span></div>
+    <div class="tile"><span class="material-symbols-rounded" style="color:#f472b6">database</span><span class="label">Memory</span></div>
+    <div class="tile"><span class="material-symbols-rounded" style="color:#f472b6">auto_awesome</span><span class="label">Genesis</span></div>
+    <div class="tile"><span class="material-symbols-rounded" style="color:#f472b6">account_tree</span><span class="label">Orchestrator</span></div>
+    <div class="tile"><span class="material-symbols-rounded" style="color:#f472b6">storage</span><span class="label">Memory Cfg</span></div>
+    <div class="tile"><span class="material-symbols-rounded" style="color:#f472b6">build</span><span class="label">Tools Cfg</span></div>
+    <div class="tile"><span class="material-symbols-rounded" style="color:#f472b6">fingerprint</span><span class="label">Identity</span></div>
+    <div class="tile"><span class="material-symbols-rounded" style="color:#f472b6">monitoring</span><span class="label">Observability</span></div>
+    <div class="tile"><span class="material-symbols-rounded" style="color:#f472b6">verified_user</span><span class="label">Guardrails</span></div>
+  </div>
+  <br>
+  <p class="mode-label">Light Mode</p>
+  <div class="grid light">
+    <div class="tile"><span class="material-symbols-rounded" style="color:#db2777">chat</span><span class="label">Chat</span></div>
+    <div class="tile"><span class="material-symbols-rounded" style="color:#db2777">settings</span><span class="label">Config</span></div>
+    <div class="tile"><span class="material-symbols-rounded" style="color:#db2777">neurology</span><span class="label">Neural Map</span></div>
+    <div class="tile"><span class="material-symbols-rounded" style="color:#db2777">smart_toy</span><span class="label">Robot</span></div>
+    <div class="tile"><span class="material-symbols-rounded" style="color:#db2777">business</span><span class="label">Businesses</span></div>
+    <div class="tile"><span class="material-symbols-rounded" style="color:#db2777">lightbulb</span><span class="label">Inventor</span></div>
+    <div class="tile"><span class="material-symbols-rounded" style="color:#db2777">memory</span><span class="label">Electronics</span></div>
+    <div class="tile"><span class="material-symbols-rounded" style="color:#db2777">terminal</span><span class="label">Commands</span></div>
+    <div class="tile"><span class="material-symbols-rounded" style="color:#db2777">database</span><span class="label">Memory</span></div>
+    <div class="tile"><span class="material-symbols-rounded" style="color:#db2777">auto_awesome</span><span class="label">Genesis</span></div>
+    <div class="tile"><span class="material-symbols-rounded" style="color:#db2777">account_tree</span><span class="label">Orchestrator</span></div>
+    <div class="tile"><span class="material-symbols-rounded" style="color:#db2777">storage</span><span class="label">Memory Cfg</span></div>
+    <div class="tile"><span class="material-symbols-rounded" style="color:#db2777">build</span><span class="label">Tools Cfg</span></div>
+    <div class="tile"><span class="material-symbols-rounded" style="color:#db2777">fingerprint</span><span class="label">Identity</span></div>
+    <div class="tile"><span class="material-symbols-rounded" style="color:#db2777">monitoring</span><span class="label">Observability</span></div>
+    <div class="tile"><span class="material-symbols-rounded" style="color:#db2777">verified_user</span><span class="label">Guardrails</span></div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ═══════════ OPTION 5: GLASSMORPHISM ═══════════ -->
+<div class="section">
+  <h2><span class="num">5</span> Iconify + Glassmorphism Tiles — Premium Desktop <span class="tag">MIT • 275,000+ icons</span></h2>
+  <p class="desc">Frosted glass tiles with duotone icons. Looks like a real OS app launcher. Hover to scale.</p>
+  <p class="mode-label">Dark Mode</p>
+  <div class="grid" style="background:linear-gradient(135deg,#0f0c29,#1a1a3e,#0f1922);gap:14px;">
+    <div class="tile"><div class="glass-tile"><iconify-icon icon="ph:chat-circle-duotone" style="font-size:26px;color:#c4b5fd"></iconify-icon></div><span class="label">Chat</span></div>
+    <div class="tile"><div class="glass-tile"><iconify-icon icon="ph:gear-duotone" style="font-size:26px;color:#c4b5fd"></iconify-icon></div><span class="label">Config</span></div>
+    <div class="tile"><div class="glass-tile"><iconify-icon icon="ph:brain-duotone" style="font-size:26px;color:#c4b5fd"></iconify-icon></div><span class="label">Neural Map</span></div>
+    <div class="tile"><div class="glass-tile"><iconify-icon icon="ph:robot-duotone" style="font-size:26px;color:#c4b5fd"></iconify-icon></div><span class="label">Robot</span></div>
+    <div class="tile"><div class="glass-tile"><iconify-icon icon="ph:buildings-duotone" style="font-size:26px;color:#c4b5fd"></iconify-icon></div><span class="label">Businesses</span></div>
+    <div class="tile"><div class="glass-tile"><iconify-icon icon="ph:lightbulb-duotone" style="font-size:26px;color:#c4b5fd"></iconify-icon></div><span class="label">Inventor</span></div>
+    <div class="tile"><div class="glass-tile"><iconify-icon icon="ph:cpu-duotone" style="font-size:26px;color:#c4b5fd"></iconify-icon></div><span class="label">Electronics</span></div>
+    <div class="tile"><div class="glass-tile"><iconify-icon icon="ph:terminal-window-duotone" style="font-size:26px;color:#c4b5fd"></iconify-icon></div><span class="label">Commands</span></div>
+    <div class="tile"><div class="glass-tile"><iconify-icon icon="ph:database-duotone" style="font-size:26px;color:#c4b5fd"></iconify-icon></div><span class="label">Memory</span></div>
+    <div class="tile"><div class="glass-tile"><iconify-icon icon="ph:atom-duotone" style="font-size:26px;color:#c4b5fd"></iconify-icon></div><span class="label">Genesis</span></div>
+    <div class="tile"><div class="glass-tile"><iconify-icon icon="ph:flow-arrow-duotone" style="font-size:26px;color:#c4b5fd"></iconify-icon></div><span class="label">Orchestrator</span></div>
+    <div class="tile"><div class="glass-tile"><iconify-icon icon="ph:hard-drives-duotone" style="font-size:26px;color:#c4b5fd"></iconify-icon></div><span class="label">Memory Cfg</span></div>
+    <div class="tile"><div class="glass-tile"><iconify-icon icon="ph:wrench-duotone" style="font-size:26px;color:#c4b5fd"></iconify-icon></div><span class="label">Tools Cfg</span></div>
+    <div class="tile"><div class="glass-tile"><iconify-icon icon="ph:fingerprint-duotone" style="font-size:26px;color:#c4b5fd"></iconify-icon></div><span class="label">Identity</span></div>
+    <div class="tile"><div class="glass-tile"><iconify-icon icon="ph:binoculars-duotone" style="font-size:26px;color:#c4b5fd"></iconify-icon></div><span class="label">Observability</span></div>
+    <div class="tile"><div class="glass-tile"><iconify-icon icon="ph:shield-check-duotone" style="font-size:26px;color:#c4b5fd"></iconify-icon></div><span class="label">Guardrails</span></div>
+  </div>
+  <br>
+  <p class="mode-label">Light Mode</p>
+  <div class="grid light" style="background:linear-gradient(135deg,#f0f4ff,#e8f0fe,#f5f0ff);gap:14px;">
+    <div class="tile"><div class="glass-tile"><iconify-icon icon="ph:chat-circle-duotone" style="font-size:26px;color:#6d28d9"></iconify-icon></div><span class="label">Chat</span></div>
+    <div class="tile"><div class="glass-tile"><iconify-icon icon="ph:gear-duotone" style="font-size:26px;color:#6d28d9"></iconify-icon></div><span class="label">Config</span></div>
+    <div class="tile"><div class="glass-tile"><iconify-icon icon="ph:brain-duotone" style="font-size:26px;color:#6d28d9"></iconify-icon></div><span class="label">Neural Map</span></div>
+    <div class="tile"><div class="glass-tile"><iconify-icon icon="ph:robot-duotone" style="font-size:26px;color:#6d28d9"></iconify-icon></div><span class="label">Robot</span></div>
+    <div class="tile"><div class="glass-tile"><iconify-icon icon="ph:buildings-duotone" style="font-size:26px;color:#6d28d9"></iconify-icon></div><span class="label">Businesses</span></div>
+    <div class="tile"><div class="glass-tile"><iconify-icon icon="ph:lightbulb-duotone" style="font-size:26px;color:#6d28d9"></iconify-icon></div><span class="label">Inventor</span></div>
+    <div class="tile"><div class="glass-tile"><iconify-icon icon="ph:cpu-duotone" style="font-size:26px;color:#6d28d9"></iconify-icon></div><span class="label">Electronics</span></div>
+    <div class="tile"><div class="glass-tile"><iconify-icon icon="ph:terminal-window-duotone" style="font-size:26px;color:#6d28d9"></iconify-icon></div><span class="label">Commands</span></div>
+    <div class="tile"><div class="glass-tile"><iconify-icon icon="ph:database-duotone" style="font-size:26px;color:#6d28d9"></iconify-icon></div><span class="label">Memory</span></div>
+    <div class="tile"><div class="glass-tile"><iconify-icon icon="ph:atom-duotone" style="font-size:26px;color:#6d28d9"></iconify-icon></div><span class="label">Genesis</span></div>
+    <div class="tile"><div class="glass-tile"><iconify-icon icon="ph:flow-arrow-duotone" style="font-size:26px;color:#6d28d9"></iconify-icon></div><span class="label">Orchestrator</span></div>
+    <div class="tile"><div class="glass-tile"><iconify-icon icon="ph:hard-drives-duotone" style="font-size:26px;color:#6d28d9"></iconify-icon></div><span class="label">Memory Cfg</span></div>
+    <div class="tile"><div class="glass-tile"><iconify-icon icon="ph:wrench-duotone" style="font-size:26px;color:#6d28d9"></iconify-icon></div><span class="label">Tools Cfg</span></div>
+    <div class="tile"><div class="glass-tile"><iconify-icon icon="ph:fingerprint-duotone" style="font-size:26px;color:#6d28d9"></iconify-icon></div><span class="label">Identity</span></div>
+    <div class="tile"><div class="glass-tile"><iconify-icon icon="ph:binoculars-duotone" style="font-size:26px;color:#6d28d9"></iconify-icon></div><span class="label">Observability</span></div>
+    <div class="tile"><div class="glass-tile"><iconify-icon icon="ph:shield-check-duotone" style="font-size:26px;color:#6d28d9"></iconify-icon></div><span class="label">Guardrails</span></div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ═══════════ OPTION 6: FLUENT EMOJI ═══════════ -->
+<div class="section">
+  <h2><span class="num">6</span> Fluent Emoji Flat — Colorful Corporate <span class="tag">MIT License • 3,145 icons</span></h2>
+  <p class="desc">Microsoft's flat emoji. Multi-color, works on any background. Playful but professional.</p>
+  <p class="mode-label">Dark Mode</p>
+  <div class="grid">
+    <div class="tile"><iconify-icon icon="fluent-emoji-flat:speech-balloon" width="36"></iconify-icon><span class="label">Chat</span></div>
+    <div class="tile"><iconify-icon icon="fluent-emoji-flat:gear" width="36"></iconify-icon><span class="label">Config</span></div>
+    <div class="tile"><iconify-icon icon="fluent-emoji-flat:brain" width="36"></iconify-icon><span class="label">Neural Map</span></div>
+    <div class="tile"><iconify-icon icon="fluent-emoji-flat:robot" width="36"></iconify-icon><span class="label">Robot</span></div>
+    <div class="tile"><iconify-icon icon="fluent-emoji-flat:office-building" width="36"></iconify-icon><span class="label">Businesses</span></div>
+    <div class="tile"><iconify-icon icon="fluent-emoji-flat:light-bulb" width="36"></iconify-icon><span class="label">Inventor</span></div>
+    <div class="tile"><iconify-icon icon="fluent-emoji-flat:electric-plug" width="36"></iconify-icon><span class="label">Electronics</span></div>
+    <div class="tile"><iconify-icon icon="fluent-emoji-flat:keyboard" width="36"></iconify-icon><span class="label">Commands</span></div>
+    <div class="tile"><iconify-icon icon="fluent-emoji-flat:floppy-disk" width="36"></iconify-icon><span class="label">Memory</span></div>
+    <div class="tile"><iconify-icon icon="fluent-emoji-flat:sparkles" width="36"></iconify-icon><span class="label">Genesis</span></div>
+    <div class="tile"><iconify-icon icon="fluent-emoji-flat:control-knobs" width="36"></iconify-icon><span class="label">Orchestrator</span></div>
+    <div class="tile"><iconify-icon icon="fluent-emoji-flat:card-file-box" width="36"></iconify-icon><span class="label">Memory Cfg</span></div>
+    <div class="tile"><iconify-icon icon="fluent-emoji-flat:wrench" width="36"></iconify-icon><span class="label">Tools Cfg</span></div>
+    <div class="tile"><iconify-icon icon="fluent-emoji-flat:bust-in-silhouette" width="36"></iconify-icon><span class="label">Identity</span></div>
+    <div class="tile"><iconify-icon icon="fluent-emoji-flat:eyes" width="36"></iconify-icon><span class="label">Observability</span></div>
+    <div class="tile"><iconify-icon icon="fluent-emoji-flat:shield" width="36"></iconify-icon><span class="label">Guardrails</span></div>
+  </div>
+  <br>
+  <p class="mode-label">Light Mode</p>
+  <div class="grid light">
+    <div class="tile"><iconify-icon icon="fluent-emoji-flat:speech-balloon" width="36"></iconify-icon><span class="label">Chat</span></div>
+    <div class="tile"><iconify-icon icon="fluent-emoji-flat:gear" width="36"></iconify-icon><span class="label">Config</span></div>
+    <div class="tile"><iconify-icon icon="fluent-emoji-flat:brain" width="36"></iconify-icon><span class="label">Neural Map</span></div>
+    <div class="tile"><iconify-icon icon="fluent-emoji-flat:robot" width="36"></iconify-icon><span class="label">Robot</span></div>
+    <div class="tile"><iconify-icon icon="fluent-emoji-flat:office-building" width="36"></iconify-icon><span class="label">Businesses</span></div>
+    <div class="tile"><iconify-icon icon="fluent-emoji-flat:light-bulb" width="36"></iconify-icon><span class="label">Inventor</span></div>
+    <div class="tile"><iconify-icon icon="fluent-emoji-flat:electric-plug" width="36"></iconify-icon><span class="label">Electronics</span></div>
+    <div class="tile"><iconify-icon icon="fluent-emoji-flat:keyboard" width="36"></iconify-icon><span class="label">Commands</span></div>
+    <div class="tile"><iconify-icon icon="fluent-emoji-flat:floppy-disk" width="36"></iconify-icon><span class="label">Memory</span></div>
+    <div class="tile"><iconify-icon icon="fluent-emoji-flat:sparkles" width="36"></iconify-icon><span class="label">Genesis</span></div>
+    <div class="tile"><iconify-icon icon="fluent-emoji-flat:control-knobs" width="36"></iconify-icon><span class="label">Orchestrator</span></div>
+    <div class="tile"><iconify-icon icon="fluent-emoji-flat:card-file-box" width="36"></iconify-icon><span class="label">Memory Cfg</span></div>
+    <div class="tile"><iconify-icon icon="fluent-emoji-flat:wrench" width="36"></iconify-icon><span class="label">Tools Cfg</span></div>
+    <div class="tile"><iconify-icon icon="fluent-emoji-flat:bust-in-silhouette" width="36"></iconify-icon><span class="label">Identity</span></div>
+    <div class="tile"><iconify-icon icon="fluent-emoji-flat:eyes" width="36"></iconify-icon><span class="label">Observability</span></div>
+    <div class="tile"><iconify-icon icon="fluent-emoji-flat:shield" width="36"></iconify-icon><span class="label">Guardrails</span></div>
+  </div>
+</div>
+
+<div style="height:40px"></div>
+
+<script>lucide.createIcons()</script>
+</body>
+</html>

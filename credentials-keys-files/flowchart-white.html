@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Artificial Brain v3 — Flowchart</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #ffffff; font-family: 'Segoe UI', system-ui, sans-serif; display: flex; justify-content: center; padding: 60px 80px; }
+.chart { width: 1800px; }
+
+h1 { color: #1e40af; text-align: center; font-size: 42px; letter-spacing: 4px; font-weight: 800; }
+.sub { color: #6b7280; text-align: center; font-size: 18px; margin: 10px 0 50px; letter-spacing: 1px; }
+
+.line-down { width: 3px; height: 36px; background: linear-gradient(to bottom, #cbd5e1, #94a3b8); margin: 0 auto; border-radius: 2px; }
+.arrow-down { text-align: center; color: #2563eb; font-size: 20px; line-height: 1; margin: 2px 0; }
+
+.box {
+  max-width: 720px; margin: 0 auto; padding: 22px 36px;
+  border-radius: 16px; text-align: center; position: relative;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+.box-label { font-size: 20px; font-weight: 800; letter-spacing: 1.5px; margin-bottom: 6px; }
+.box-desc { font-size: 15px; color: #4b5563; line-height: 1.6; }
+
+.box-user { background: #f8fafc; border: 2px solid #94a3b8; }
+.box-user .box-label { color: #1e293b; }
+
+.box-server { background: #eff6ff; border: 2px solid #3b82f6; }
+.box-server .box-label { color: #1d4ed8; }
+
+.box-brain { background: #f5f3ff; border: 2px solid #7c3aed; }
+.box-brain .box-label { color: #6d28d9; }
+
+.box-llm { background: #f0fdf4; border: 2px solid #16a34a; }
+.box-llm .box-label { color: #15803d; }
+
+.box-neo4j { background: #fffbeb; border: 2px solid #d97706; }
+.box-neo4j .box-label { color: #b45309; }
+
+.box-agent { background: #fef2f2; border: 2px solid #dc2626; }
+.box-agent .box-label { color: #b91c1c; }
+
+.box-sim { background: #ecfeff; border: 2px solid #0891b2; }
+.box-sim .box-label { color: #0e7490; }
+
+.box-frontend { background: #faf5ff; border: 2px solid #9333ea; }
+.box-frontend .box-label { color: #7e22ce; }
+
+.split { display: flex; gap: 28px; justify-content: center; align-items: flex-start; }
+.split-3 > * { flex: 1; max-width: 420px; }
+
+.branch { display: flex; justify-content: center; position: relative; height: 44px; }
+.branch::before {
+  content: ''; position: absolute; top: 0; left: 50%; width: 3px; height: 18px; background: #cbd5e1;
+}
+.branch::after {
+  content: ''; position: absolute; top: 18px;
+  height: 3px; background: #cbd5e1; border-radius: 2px;
+}
+.branch-3::after { left: calc(50% - 380px); right: calc(50% - 380px); }
+
+.branch-leg { width: 3px; height: 26px; background: #cbd5e1; }
+.branch-leg-wrap { display: flex; flex-direction: column; align-items: center; }
+
+.section { margin: 48px 0 24px; border-top: 2px solid #e5e7eb; padding-top: 28px; }
+.section-title { text-align: center; color: #1d4ed8; font-size: 16px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 22px; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 12px; }
+.chip {
+  padding: 5px 14px; border-radius: 8px; font-size: 13px; font-weight: 700;
+  background: #ffffff; border: 1.5px solid #e2e8f0; letter-spacing: 0.5px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.bg-row { display: flex; gap: 24px; justify-content: center; }
+.bg-row > * { flex: 1; max-width: 400px; }
+</style>
+</head>
+<body>
+<div class="chart">
+
+<h1>ARTIFICIAL BRAIN v3</h1>
+<p class="sub">How it works — Simple Flowchart</p>
+
+<!-- USER -->
+<div class="box box-user">
+  <div class="box-label">USER</div>
+  <div class="box-desc">Opens browser → types a message or command</div>
+</div>
+<div class="line-down"></div>
+<div class="arrow-down">▼</div>
+
+<!-- FRONTEND -->
+<div class="box box-frontend">
+  <div class="box-label">REACT FRONTEND</div>
+  <div class="box-desc">
+    Home (desktop UI) · Chat · Neural Map · Robot · Memory · Config<br>
+    WebSocket receives live brain state every 2 seconds
+  </div>
+</div>
+<div class="line-down"></div>
+<div class="arrow-down">▼</div>
+
+<!-- SERVER -->
+<div class="box box-server">
+  <div class="box-label">EXPRESS SERVER — Port 8095</div>
+  <div class="box-desc">
+    Single entry point · HTTP APIs + WebSocket<br>
+    /api/chat · /api/brain · /api/auth · /api/sim · /businesses/api · /inventor-studio/api
+  </div>
+</div>
+<div class="line-down"></div>
+<div class="arrow-down">▼</div>
+
+<!-- CHAT -->
+<div class="box box-server">
+  <div class="box-label">POST /api/chat</div>
+  <div class="box-desc">Receives user message → injects working directory context → sends to Broca</div>
+</div>
+<div class="line-down"></div>
+<div class="arrow-down">▼</div>
+
+<!-- BRAIN ENGINE -->
+<div class="box box-brain" style="max-width:860px">
+  <div class="box-label">BRAIN ENGINE — 14 Neural Modules</div>
+  <div class="box-desc">In-process EventEmitter bus · Config-based signal routing via Thalamus</div>
+  <div class="chips">
+    <span class="chip" style="color:#0e7490">Prefrontal</span>
+    <span class="chip" style="color:#7e22ce">Broca</span>
+    <span class="chip" style="color:#4338ca">Wernicke</span>
+    <span class="chip" style="color:#be185d">Amygdala</span>
+    <span class="chip" style="color:#15803d">Hippocampus</span>
+    <span class="chip" style="color:#b45309">Cerebellum</span>
+    <span class="chip" style="color:#0369a1">Visual Cortex</span>
+    <span class="chip" style="color:#047857">Temporal Lobe</span>
+    <span class="chip" style="color:#a16207">Parietal Lobe</span>
+    <span class="chip" style="color:#c2410c">Thalamus</span>
+    <span class="chip" style="color:#b91c1c">Basal Ganglia</span>
+    <span class="chip" style="color:#15803d">Cingulate</span>
+    <span class="chip" style="color:#7e22ce">Insula</span>
+    <span class="chip" style="color:#475569">Brainstem</span>
+  </div>
+</div>
+
+<!-- 3-WAY BRANCH -->
+<div class="branch branch-3"></div>
+<div class="split split-3" style="max-width:1200px; margin:0 auto;">
+
+  <!-- LEFT: Language pipeline -->
+  <div class="branch-leg-wrap">
+    <div class="branch-leg"></div>
+    <div class="arrow-down">▼</div>
+    <div class="box box-brain" style="max-width:360px">
+      <div class="box-label" style="font-size:17px">WERNICKE</div>
+      <div class="box-desc">Parses user intent using<br>embedding cosine similarity</div>
+    </div>
+    <div class="line-down"></div>
+    <div class="arrow-down">▼</div>
+    <div class="box box-brain" style="max-width:360px">
+      <div class="box-label" style="font-size:17px">PREFRONTAL</div>
+      <div class="box-desc">Plans goal using LLM<br>+ RAG from memory &amp; knowledge</div>
+    </div>
+    <div class="line-down"></div>
+    <div class="arrow-down">▼</div>
+    <div class="box box-brain" style="max-width:360px">
+      <div class="box-label" style="font-size:17px">BROCA</div>
+      <div class="box-desc">Generates text response<br>+ extracts TOOL: {...} calls</div>
+    </div>
+  </div>
+
+  <!-- CENTER: LLM + Memory -->
+  <div class="branch-leg-wrap">
+    <div class="branch-leg"></div>
+    <div class="arrow-down">▼</div>
+    <div class="box box-llm" style="max-width:360px">
+      <div class="box-label" style="font-size:17px">LLM SERVICE</div>
+      <div class="box-desc">
+        OpenRouter → NVIDIA → Ollama<br>
+        Roles: reasoning · language ·<br>coder · vision · embed<br>
+        <span style="color:#6b7280">Circuit breaker: 3 fails → 5min cooldown</span>
+      </div>
+    </div>
+    <div class="line-down"></div>
+    <div class="arrow-down">▼</div>
+    <div class="box box-neo4j" style="max-width:360px">
+      <div class="box-label" style="font-size:17px">NEO4J MEMORY</div>
+      <div class="box-desc">
+        Episodic: short → long term<br>
+        Knowledge: concept → relation → concept<br>
+        <span style="color:#6b7280">Bolt (local) or HTTP (tunnel)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Robot loop -->
+  <div class="branch-leg-wrap">
+    <div class="branch-leg"></div>
+    <div class="arrow-down">▼</div>
+    <div class="box box-sim" style="max-width:360px">
+      <div class="box-label" style="font-size:17px">ROBOT LOOP</div>
+      <div class="box-desc">
+        Visual Cortex → camera frames<br>
+        Parietal Lobe → fuse sensors<br>
+        Cerebellum → motor action (RL)<br>
+        Amygdala → emotion state<br>
+        <span style="color:#6b7280">MuJoCo simulator via tunnel</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="height:40px"></div>
+
+<!-- TOOL CALL SECTION -->
+<div class="section">
+  <div class="section-title">If Broca outputs a TOOL: call</div>
+</div>
+
+<div class="box box-server">
+  <div class="box-label">SERVER — Tool Router</div>
+  <div class="box-desc">Extracts TOOL: {"tool": "...", "args": {...}} from LLM reply → sends via WebSocket to agent</div>
+</div>
+<div class="line-down"></div>
+<div class="arrow-down">▼</div>
+
+<div class="box box-agent" style="max-width:800px">
+  <div class="box-label">LOCAL AGENT (runs on user's machine)</div>
+  <div class="box-desc">
+    Connected via WebSocket · 36 tools: files, folders, git, bash, python, screenshot, web search, clipboard, system info<br>
+    Executes tool → returns result → server formats friendly response
+  </div>
+</div>
+<div class="line-down"></div>
+<div class="arrow-down">▼</div>
+
+<div class="box box-server">
+  <div class="box-label">SERVER — Format Response</div>
+  <div class="box-desc">Combines LLM text + tool results → sends JSON back to frontend</div>
+</div>
+<div class="line-down"></div>
+<div class="arrow-down">▼</div>
+
+<div class="box box-frontend">
+  <div class="box-label">FRONTEND — Shows Reply</div>
+  <div class="box-desc">Chat bubble with brain response · Tool output formatted · Neural Map shows live signal pulses</div>
+</div>
+<div class="line-down"></div>
+<div class="arrow-down">▼</div>
+
+<div class="box box-user">
+  <div class="box-label">USER SEES RESULT</div>
+  <div class="box-desc">Text response + file created / command output / search results / etc.</div>
+</div>
+
+<!-- BACKGROUND SECTION -->
+<div class="section">
+  <div class="section-title">Always Running in Background</div>
+</div>
+
+<div class="bg-row">
+  <div class="box box-brain">
+    <div class="box-label" style="font-size:16px">BRAIN LOOPS</div>
+    <div class="box-desc" style="text-align:left">
+      • Thalamus polls sim every 2s<br>
+      • Prefrontal auto-plans every 45s<br>
+      • Hippocampus consolidates memory every 60s<br>
+      • Visual Cortex grabs camera every 3s<br>
+      • Insula health check every 15s<br>
+      • Brainstem heartbeat every 30s
+    </div>
+  </div>
+  <div class="box box-server">
+    <div class="box-label" style="font-size:16px">WEBSOCKET PUSH</div>
+    <div class="box-desc" style="text-align:left">
+      • Brain state broadcast to all browsers every 2s<br>
+      • Signal log, active nodes, agent status<br>
+      • Frontend updates Neural Map + stats in real-time<br>
+      • Agent connection status notifications
+    </div>
+  </div>
+  <div class="box box-neo4j">
+    <div class="box-label" style="font-size:16px">MEMORY CYCLE</div>
+    <div class="box-desc" style="text-align:left">
+      • Modules write short-term memories<br>
+      • Hippocampus promotes important → long-term<br>
+      • Low-importance memories pruned after 5min<br>
+      • Knowledge graph grows with each fact learned
+    </div>
+  </div>
+</div>
+
+<p style="text-align:center; color:#9ca3b8; font-size:15px; margin-top:48px; letter-spacing:1px;">
+  Artificial Brain v3 · Everything on one port (8095) · Node.js + React + Neo4j + MongoDB
+</p>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,18 @@
+┌───────────────────┬────────────────────────────────────────────┐
+  │      Command      │                What It Does                │
+  ├───────────────────┼────────────────────────────────────────────┤
+  │ npm run dev       │ Dev mode — HMR, instant changes, no builds │
+  ├───────────────────┼────────────────────────────────────────────┤
+  │ npm run build:all │ Build everything for production            │
+  ├───────────────────┼────────────────────────────────────────────┤
+  │ npm run start     │ Start production server on port 3003       │
+  ├───────────────────┼────────────────────────────────────────────┤
+  │ npm run agent     │ Start local agent                          │
+  └───────────────────┴────────────────────────────────────────────┘
+
+ Or build individually:
+  npm run build:genesis
+  npm run build:businesses
+  npm run build:inventor
+
+  Then node server.js serves everything from port 3003.

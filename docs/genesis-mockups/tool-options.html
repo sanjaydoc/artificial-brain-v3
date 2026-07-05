@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Genesis Chamber — Tool Connection Options</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Kanit:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Poppins', system-ui, sans-serif; background: #ffffff; color: #262626; min-height: 100vh; }
+  h1, h2, h3, h4 { font-family: 'Kanit', system-ui, sans-serif; }
+
+  .header { max-width: 1200px; margin: 0 auto; padding: 40px 24px 20px; }
+  .header h1 { font-size: 28px; font-weight: 700; color: #262626; }
+  .header p { color: #6b7280; font-size: 14px; margin-top: 6px; }
+
+  .options { max-width: 1200px; margin: 0 auto; padding: 0 24px 60px; display: flex; flex-direction: column; gap: 48px; }
+
+  .option { border: 2px solid #e5e7eb; border-radius: 18px; overflow: hidden; transition: border-color 0.2s; }
+  .option:hover { border-color: rgba(59, 130, 246, 0.4); }
+
+  .option-header { padding: 20px 24px; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; gap: 16px; }
+  .option-badge { width: 36px; height: 36px; border-radius: 10px; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); display: grid; place-items: center; color: #3b82f6; font-weight: 800; font-family: 'Kanit'; font-size: 16px; flex-shrink: 0; }
+  .option-title { font-size: 18px; font-weight: 700; color: #262626; }
+  .option-sub { font-size: 13px; color: #6b7280; margin-top: 2px; }
+
+  .canvas-mock { padding: 24px; background: #f8fafc; min-height: 420px; position: relative; overflow: hidden; }
+  .canvas-mock::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(circle, #e2e8f0 1px, transparent 1px); background-size: 24px 24px; pointer-events: none; }
+
+  /* Nodes */
+  .node { position: absolute; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); z-index: 2; font-family: 'Poppins', sans-serif; }
+
+  .agent-node { width: 220px; background: #fff; border: 2px solid #3b82f6; }
+  .agent-node .node-header { background: rgba(59, 130, 246, 0.08); padding: 8px 12px; border-bottom: 1px solid rgba(59, 130, 246, 0.15); display: flex; align-items: center; gap: 8px; border-radius: 10px 10px 0 0; }
+  .agent-node .node-header .dot { width: 8px; height: 8px; border-radius: 50%; background: #3b82f6; }
+  .agent-node .node-header span { font-size: 11px; font-weight: 700; color: #1d4ed8; font-family: 'Kanit'; }
+  .agent-node .node-body { padding: 10px 12px; }
+  .agent-node .node-body .name { font-size: 13px; font-weight: 700; color: #111827; font-family: 'Kanit'; }
+  .agent-node .node-body .desc { font-size: 10px; color: #6b7280; margin-top: 3px; }
+
+  .tool-node { width: 160px; background: #fff; border: 2px solid #14b8a6; }
+  .tool-node .node-header { background: rgba(20, 184, 166, 0.08); padding: 6px 10px; border-bottom: 1px solid rgba(20, 184, 166, 0.15); display: flex; align-items: center; gap: 6px; border-radius: 10px 10px 0 0; }
+  .tool-node .node-header .dot { width: 6px; height: 6px; border-radius: 50%; background: #14b8a6; }
+  .tool-node .node-header span { font-size: 10px; font-weight: 700; color: #0f766e; font-family: 'Kanit'; }
+  .tool-node .node-body { padding: 8px 10px; }
+  .tool-node .node-body .name { font-size: 11px; font-weight: 600; color: #111827; font-family: 'JetBrains Mono'; }
+  .tool-node .node-body .desc { font-size: 9px; color: #6b7280; margin-top: 2px; }
+
+  /* Sidebar panel */
+  .sidebar-mock { position: absolute; right: 0; top: 0; bottom: 0; width: 240px; background: #fff; border-left: 1px solid #e5e7eb; z-index: 5; padding: 16px; overflow-y: auto; }
+  .sidebar-mock h4 { font-size: 10px; color: #6b7280; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; }
+  .sidebar-tool { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 6px; cursor: grab; transition: all 0.15s; font-size: 11px; }
+  .sidebar-tool:hover { border-color: rgba(59, 130, 246, 0.3); background: rgba(59, 130, 246, 0.04); }
+  .sidebar-tool .tool-icon { width: 24px; height: 24px; border-radius: 6px; background: rgba(20, 184, 166, 0.1); border: 1px solid rgba(20, 184, 166, 0.2); display: grid; place-items: center; font-size: 10px; flex-shrink: 0; }
+  .sidebar-tool .tool-label { font-weight: 600; color: #111827; }
+  .sidebar-tool .tool-cat { font-size: 9px; color: #6b7280; }
+
+  /* Checkbox inside agent */
+  .checkbox-panel { padding: 10px 12px; border-top: 1px solid rgba(59, 130, 246, 0.1); }
+  .checkbox-panel h5 { font-size: 9px; color: #6b7280; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
+  .checkbox-row { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; font-size: 10px; color: #374151; }
+  .checkbox-row input { accent-color: #3b82f6; width: 13px; height: 13px; }
+  .checkbox-row .cat { color: #6b7280; font-size: 9px; margin-left: auto; }
+
+  /* Wires */
+  .wire-svg { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+
+  /* Pros/Cons */
+  .pros-cons { padding: 16px 24px 20px; border-top: 1px solid #e5e7eb; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .pros h4, .cons h4 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  .pros h4 { color: #16a34a; }
+  .cons h4 { color: #ef4444; }
+  .pros li, .cons li { font-size: 12px; color: #4b5563; line-height: 1.6; margin-bottom: 4px; list-style: none; padding-left: 16px; position: relative; }
+  .pros li::before { content: '+'; position: absolute; left: 0; color: #16a34a; font-weight: 700; }
+  .cons li::before { content: '-'; position: absolute; left: 0; color: #ef4444; font-weight: 700; }
+
+  /* Layer badges */
+  .layer-strip { position: absolute; bottom: 12px; left: 12px; display: flex; gap: 4px; z-index: 3; flex-wrap: wrap; max-width: calc(100% - 264px); }
+  .layer-badge { font-size: 9px; font-weight: 600; padding: 3px 8px; border-radius: 6px; font-family: 'Kanit'; }
+  .layer-orch { background: rgba(59, 130, 246, 0.08); color: #2563eb; border: 1px solid rgba(59, 130, 246, 0.2); }
+  .layer-mem { background: rgba(139, 92, 246, 0.08); color: #7c3aed; border: 1px solid rgba(139, 92, 246, 0.2); }
+  .layer-tool { background: rgba(20, 184, 166, 0.08); color: #0f766e; border: 1px solid rgba(20, 184, 166, 0.2); }
+  .layer-id { background: rgba(249, 115, 22, 0.08); color: #c2410c; border: 1px solid rgba(249, 115, 22, 0.2); }
+  .layer-obs { background: rgba(234, 179, 8, 0.08); color: #a16207; border: 1px solid rgba(234, 179, 8, 0.2); }
+  .layer-guard { background: rgba(239, 68, 68, 0.08); color: #dc2626; border: 1px solid rgba(239, 68, 68, 0.2); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Genesis Chamber — Tool Connection Options</h1>
+  <p>Pick which approach feels right for connecting tools to agents on the canvas.</p>
+</div>
+
+<div class="options">
+
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <!-- OPTION A: Toolbox Sidebar -->
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <div class="option">
+    <div class="option-header">
+      <div class="option-badge">A</div>
+      <div>
+        <div class="option-title">Toolbox Sidebar</div>
+        <div class="option-sub">Drag tools from a sidebar panel onto the canvas, then wire them to agents</div>
+      </div>
+    </div>
+
+    <div class="canvas-mock" style="min-height: 460px;">
+      <!-- Agent node -->
+      <div class="agent-node node" style="left: 120px; top: 80px;">
+        <div class="node-header"><div class="dot"></div><span>AGENT</span></div>
+        <div class="node-body">
+          <div class="name">Customer Service Bot</div>
+          <div class="desc">Handles live chat, resolves complaints, escalates when needed</div>
+        </div>
+      </div>
+
+      <!-- Tool nodes wired to agent -->
+      <div class="tool-node node" style="left: 430px; top: 40px;">
+        <div class="node-header"><div class="dot"></div><span>TOOL</span></div>
+        <div class="node-body">
+          <div class="name">http_post</div>
+          <div class="desc">Send refund API calls</div>
+        </div>
+      </div>
+
+      <div class="tool-node node" style="left: 430px; top: 160px;">
+        <div class="node-header"><div class="dot"></div><span>TOOL</span></div>
+        <div class="node-body">
+          <div class="name">search_web</div>
+          <div class="desc">Look up order status</div>
+        </div>
+      </div>
+
+      <div class="tool-node node" style="left: 430px; top: 280px;">
+        <div class="node-header"><div class="dot"></div><span>TOOL</span></div>
+        <div class="node-body">
+          <div class="name">read_file</div>
+          <div class="desc">Read FAQ documents</div>
+        </div>
+      </div>
+
+      <!-- Wires -->
+      <svg class="wire-svg" width="100%" height="100%">
+        <path d="M 340 120 C 380 120, 400 80, 430 80" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" />
+        <circle cx="430" cy="80" r="3" fill="#22c55e" />
+        <path d="M 340 120 C 380 120, 400 200, 430 200" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" />
+        <circle cx="430" cy="200" r="3" fill="#22c55e" />
+        <path d="M 340 120 C 380 120, 400 320, 430 320" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" />
+        <circle cx="430" cy="320" r="3" fill="#22c55e" />
+      </svg>
+
+      <!-- Sidebar -->
+      <div class="sidebar-mock">
+        <h4>Toolbox</h4>
+        <div class="sidebar-tool"><div class="tool-icon">F</div><div><div class="tool-label">read_file</div><div class="tool-cat">File</div></div></div>
+        <div class="sidebar-tool"><div class="tool-icon">F</div><div><div class="tool-label">write_file</div><div class="tool-cat">File</div></div></div>
+        <div class="sidebar-tool"><div class="tool-icon">S</div><div><div class="tool-label">search_code</div><div class="tool-cat">Search</div></div></div>
+        <div class="sidebar-tool"><div class="tool-icon">G</div><div><div class="tool-label">git_status</div><div class="tool-cat">Git</div></div></div>
+        <div class="sidebar-tool"><div class="tool-icon">N</div><div><div class="tool-label">http_get</div><div class="tool-cat">Network</div></div></div>
+        <div class="sidebar-tool"><div class="tool-icon">N</div><div><div class="tool-label">http_post</div><div class="tool-cat">Network</div></div></div>
+        <div class="sidebar-tool"><div class="tool-icon">W</div><div><div class="tool-label">search_web</div><div class="tool-cat">Web</div></div></div>
+        <div class="sidebar-tool"><div class="tool-icon">W</div><div><div class="tool-label">scrape_web</div><div class="tool-cat">Web</div></div></div>
+        <div class="sidebar-tool"><div class="tool-icon">D</div><div><div class="tool-label">screenshot</div><div class="tool-cat">Desktop</div></div></div>
+        <div class="sidebar-tool"><div class="tool-icon">T</div><div><div class="tool-label">bash</div><div class="tool-cat">Scripts</div></div></div>
+        <div style="font-size: 10px; color: #9ca3af; margin-top: 8px; text-align: center;">Drag to canvas &amp; wire to agent</div>
+      </div>
+
+      <!-- Layer badges -->
+      <div class="layer-strip">
+        <span class="layer-badge layer-orch">Orchestrator</span>
+        <span class="layer-badge layer-mem">Memory</span>
+        <span class="layer-badge layer-tool">Tools</span>
+        <span class="layer-badge layer-id">Identity</span>
+        <span class="layer-badge layer-obs">Observability</span>
+        <span class="layer-badge layer-guard">Guardrails</span>
+      </div>
+    </div>
+
+    <div class="pros-cons">
+      <div class="pros">
+        <h4>Pros</h4>
+        <ul>
+          <li>Most visual — see every connection at a glance</li>
+          <li>n8n-style feel — familiar to automation users</li>
+          <li>Can see tool reuse across multiple agents</li>
+          <li>Drag-and-drop is satisfying UX</li>
+        </ul>
+      </div>
+      <div class="cons">
+        <h4>Cons</h4>
+        <ul>
+          <li>Canvas gets cluttered with many tools (38 tools = lots of nodes)</li>
+          <li>More complex to implement (drag, drop, wire, validate)</li>
+          <li>Wiring 10+ tools per agent creates visual spaghetti</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <!-- OPTION B: Checkbox List Inside Agent -->
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <div class="option">
+    <div class="option-header">
+      <div class="option-badge">B</div>
+      <div>
+        <div class="option-title">Checkbox List Inside Agent Node</div>
+        <div class="option-sub">Open agent config panel, check which tools it can access — no separate tool nodes</div>
+      </div>
+    </div>
+
+    <div class="canvas-mock" style="min-height: 460px;">
+      <!-- Agent node with checkboxes -->
+      <div class="agent-node node" style="left: 80px; top: 50px; width: 240px;">
+        <div class="node-header"><div class="dot"></div><span>AGENT</span></div>
+        <div class="node-body">
+          <div class="name">Customer Service Bot</div>
+          <div class="desc">Handles live chat, resolves complaints</div>
+        </div>
+        <div class="checkbox-panel">
+          <h5>Allowed Tools</h5>
+          <div class="checkbox-row"><input type="checkbox" checked /><span>http_post</span><span class="cat">Network</span></div>
+          <div class="checkbox-row"><input type="checkbox" checked /><span>search_web</span><span class="cat">Web</span></div>
+          <div class="checkbox-row"><input type="checkbox" checked /><span>read_file</span><span class="cat">File</span></div>
+          <div class="checkbox-row"><input type="checkbox" /><span>write_file</span><span class="cat">File</span></div>
+          <div class="checkbox-row"><input type="checkbox" /><span>bash</span><span class="cat">Scripts</span></div>
+          <div class="checkbox-row"><input type="checkbox" /><span>git_commit</span><span class="cat">Git</span></div>
+          <div style="font-size: 9px; color: #9ca3af; margin-top: 6px;">3 of 38 tools enabled</div>
+        </div>
+      </div>
+
+      <!-- Second agent -->
+      <div class="agent-node node" style="left: 420px; top: 50px; width: 240px;">
+        <div class="node-header"><div class="dot"></div><span>AGENT</span></div>
+        <div class="node-body">
+          <div class="name">Report Generator</div>
+          <div class="desc">Weekly sales summary agent</div>
+        </div>
+        <div class="checkbox-panel">
+          <h5>Allowed Tools</h5>
+          <div class="checkbox-row"><input type="checkbox" checked /><span>http_get</span><span class="cat">Network</span></div>
+          <div class="checkbox-row"><input type="checkbox" checked /><span>write_file</span><span class="cat">File</span></div>
+          <div class="checkbox-row"><input type="checkbox" checked /><span>read_file</span><span class="cat">File</span></div>
+          <div class="checkbox-row"><input type="checkbox" /><span>bash</span><span class="cat">Scripts</span></div>
+          <div class="checkbox-row"><input type="checkbox" /><span>search_web</span><span class="cat">Web</span></div>
+          <div class="checkbox-row"><input type="checkbox" /><span>scrape_web</span><span class="cat">Web</span></div>
+          <div style="font-size: 9px; color: #9ca3af; margin-top: 6px;">3 of 38 tools enabled</div>
+        </div>
+      </div>
+
+      <!-- Wire between agents -->
+      <svg class="wire-svg" width="100%" height="100%">
+        <path d="M 320 180 C 360 180, 390 180, 420 180" fill="none" stroke="#3b82f6" stroke-width="2" stroke-dasharray="6,4" stroke-linecap="round" />
+        <circle cx="420" cy="180" r="3" fill="#3b82f6" />
+        <text x="370" y="172" fill="#3b82f6" font-size="9" font-family="Kanit" text-anchor="middle">triggers</text>
+      </svg>
+
+      <!-- Layer badges -->
+      <div class="layer-strip" style="max-width: 100%;">
+        <span class="layer-badge layer-orch">Orchestrator</span>
+        <span class="layer-badge layer-mem">Memory</span>
+        <span class="layer-badge layer-tool">Tools</span>
+        <span class="layer-badge layer-id">Identity</span>
+        <span class="layer-badge layer-obs">Observability</span>
+        <span class="layer-badge layer-guard">Guardrails</span>
+      </div>
+    </div>
+
+    <div class="pros-cons">
+      <div class="pros">
+        <h4>Pros</h4>
+        <ul>
+          <li>Clean canvas — only agent nodes visible, no tool clutter</li>
+          <li>Fast to configure — just check/uncheck</li>
+          <li>Canvas stays focused on agent-to-agent flow</li>
+          <li>Simpler to implement</li>
+        </ul>
+      </div>
+      <div class="cons">
+        <h4>Cons</h4>
+        <ul>
+          <li>Can't visualise tool connections between agents</li>
+          <li>Less "n8n feel" — feels more like a form</li>
+          <li>Tool sharing between agents not visible</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <!-- OPTION C: Tool Nodes on Canvas (Full n8n Style) -->
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <div class="option">
+    <div class="option-header">
+      <div class="option-badge">C</div>
+      <div>
+        <div class="option-title">Tool Nodes on Canvas (Full n8n Style)</div>
+        <div class="option-sub">Each tool is a draggable node — draw wires between agent and tool nodes</div>
+      </div>
+    </div>
+
+    <div class="canvas-mock" style="min-height: 520px;">
+      <!-- Agent 1 -->
+      <div class="agent-node node" style="left: 40px; top: 60px;">
+        <div class="node-header"><div class="dot"></div><span>AGENT</span></div>
+        <div class="node-body">
+          <div class="name">Customer Service Bot</div>
+          <div class="desc">Live chat handler</div>
+        </div>
+      </div>
+
+      <!-- Agent 2 -->
+      <div class="agent-node node" style="left: 40px; top: 300px;">
+        <div class="node-header"><div class="dot"></div><span>AGENT</span></div>
+        <div class="node-body">
+          <div class="name">Report Generator</div>
+          <div class="desc">Weekly summary</div>
+        </div>
+      </div>
+
+      <!-- Shared tool -->
+      <div class="tool-node node" style="left: 370px; top: 60px;">
+        <div class="node-header"><div class="dot"></div><span>TOOL</span></div>
+        <div class="node-body">
+          <div class="name">http_post</div>
+          <div class="desc">API calls</div>
+        </div>
+      </div>
+
+      <div class="tool-node node" style="left: 370px; top: 170px;">
+        <div class="node-header"><div class="dot"></div><span>TOOL</span></div>
+        <div class="node-body">
+          <div class="name">search_web</div>
+          <div class="desc">Web search</div>
+        </div>
+      </div>
+
+      <!-- Shared between both agents -->
+      <div class="tool-node node" style="left: 370px; top: 280px; border-color: #f59e0b;">
+        <div class="node-header" style="background: rgba(245, 158, 11, 0.08); border-color: rgba(245, 158, 11, 0.15);">
+          <div class="dot" style="background: #f59e0b;"></div><span style="color: #92400e;">SHARED TOOL</span>
+        </div>
+        <div class="node-body">
+          <div class="name">read_file</div>
+          <div class="desc">Used by both agents</div>
+        </div>
+      </div>
+
+      <div class="tool-node node" style="left: 370px; top: 390px;">
+        <div class="node-header"><div class="dot"></div><span>TOOL</span></div>
+        <div class="node-body">
+          <div class="name">write_file</div>
+          <div class="desc">Save reports</div>
+        </div>
+      </div>
+
+      <!-- Trigger wire between agents -->
+      <svg class="wire-svg" width="100%" height="100%">
+        <!-- Agent 1 → tools -->
+        <path d="M 260 110 C 310 110, 340 100, 370 100" fill="none" stroke="#22c55e" stroke-width="2" />
+        <circle cx="370" cy="100" r="3" fill="#22c55e" />
+        <path d="M 260 110 C 310 110, 340 210, 370 210" fill="none" stroke="#22c55e" stroke-width="2" />
+        <circle cx="370" cy="210" r="3" fill="#22c55e" />
+        <path d="M 260 110 C 310 150, 340 320, 370 320" fill="none" stroke="#f59e0b" stroke-width="2" />
+        <circle cx="370" cy="320" r="3" fill="#f59e0b" />
+
+        <!-- Agent 2 → tools -->
+        <path d="M 260 350 C 310 350, 340 320, 370 320" fill="none" stroke="#f59e0b" stroke-width="2" />
+        <path d="M 260 350 C 310 350, 340 430, 370 430" fill="none" stroke="#22c55e" stroke-width="2" />
+        <circle cx="370" cy="430" r="3" fill="#22c55e" />
+
+        <!-- Agent-to-agent trigger -->
+        <path d="M 150 200 C 150 250, 150 260, 150 300" fill="none" stroke="#3b82f6" stroke-width="2" stroke-dasharray="6,4" />
+        <circle cx="150" cy="300" r="3" fill="#3b82f6" />
+        <text x="162" y="255" fill="#3b82f6" font-size="9" font-family="Kanit">triggers</text>
+      </svg>
+
+      <!-- Layer badges -->
+      <div class="layer-strip" style="max-width: 340px;">
+        <span class="layer-badge layer-orch">Orchestrator</span>
+        <span class="layer-badge layer-mem">Memory</span>
+        <span class="layer-badge layer-tool">Tools</span>
+        <span class="layer-badge layer-id">Identity</span>
+        <span class="layer-badge layer-obs">Observability</span>
+        <span class="layer-badge layer-guard">Guardrails</span>
+      </div>
+    </div>
+
+    <div class="pros-cons">
+      <div class="pros">
+        <h4>Pros</h4>
+        <ul>
+          <li>Full n8n visual experience — everything on canvas</li>
+          <li>Shared tools visible (orange "read_file" used by both agents)</li>
+          <li>Agent-to-agent + agent-to-tool wiring all in one view</li>
+          <li>Most powerful — can model complex multi-agent pipelines</li>
+        </ul>
+      </div>
+      <div class="cons">
+        <h4>Cons</h4>
+        <ul>
+          <li>Gets busy fast with many agents + tools</li>
+          <li>Most complex to build (drag, drop, wire, shared nodes)</li>
+          <li>Need zoom/minimap for large workflows</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

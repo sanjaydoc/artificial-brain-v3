@@ -1,0 +1,31 @@
+{
+  "name": "brain-agent",
+  "version": "3.1.0",
+  "description": "Local agent for Artificial Brain v3 — connects your machine to the Brain via WebSocket, giving it access to 144 tools (filesystem, git, database, browser, docker, business APIs, AI/LLM, and more)",
+  "type": "module",
+  "main": "agent.js",
+  "bin": { "brain-agent": "agent.js" },
+  "engines": { "node": ">=18.0.0" },
+  "scripts": {
+    "start": "node agent.js"
+  },
+  "keywords": [
+    "artificial-brain",
+    "ai-agent",
+    "local-agent",
+    "brain-agent",
+    "websocket",
+    "tool-calling",
+    "filesystem",
+    "cli"
+  ],
+  "author": "sanjayanbu",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sanjaydoc/artificial-brain-v3"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

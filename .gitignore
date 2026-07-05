@@ -1,0 +1,4 @@
+node_modules
+.env
+apps/businesses/.env
+apps/inventor-studio/.env

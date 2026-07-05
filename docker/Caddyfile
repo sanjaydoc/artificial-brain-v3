@@ -1,0 +1,64 @@
+# Artificial Brain v3 — Caddy Auth Gate
+# All services require X-Auth-Token header matching {$AUTH_TOKEN}
+
+# Port 80: Ollama API gate → ollama.klabs.network
+:80 {
+	@auth {
+		header X-Auth-Token {$AUTH_TOKEN}
+	}
+	handle @auth {
+		reverse_proxy ollama:11434 {
+			header_up Host {upstream_hostport}
+			transport http {
+				read_timeout 600s
+				write_timeout 600s
+			}
+		}
+	}
+	respond "Unauthorized" 401
+}
+
+# Port 81: Neo4j Bolt gate → neo4j.klabs.network
+:81 {
+	@auth {
+		header X-Auth-Token {$AUTH_TOKEN}
+	}
+	handle @auth {
+		reverse_proxy neo4j:7474 {
+			header_up Host {upstream_hostport}
+		}
+	}
+	respond "Unauthorized" 401
+}
+
+# Port 82: Sim gate → sim.klabs.network
+:82 {
+	@auth {
+		header X-Auth-Token {$AUTH_TOKEN}
+	}
+	handle @auth {
+		reverse_proxy sim:8091 {
+			header_up Host {upstream_hostport}
+			transport http {
+				read_timeout 30s
+			}
+		}
+	}
+	respond "Unauthorized" 401
+}
+
+# Port 83: RL gate → rl.klabs.network
+:83 {
+	@auth {
+		header X-Auth-Token {$AUTH_TOKEN}
+	}
+	handle @auth {
+		reverse_proxy cerebellum-rl:8092 {
+			header_up Host {upstream_hostport}
+			transport http {
+				read_timeout 30s
+			}
+		}
+	}
+	respond "Unauthorized" 401
+}

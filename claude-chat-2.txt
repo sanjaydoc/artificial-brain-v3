@@ -1,0 +1,357 @@
+═══════════════════════════════════════════════════════════════════════════════
+Artificial Brain v3 — Claude Chat Session 2
+Date: 2026-05-14 → 2026-05-15
+Model: Claude Opus 4.6 (1M context)
+═══════════════════════════════════════════════════════════════════════════════
+
+SESSION OVERVIEW
+────────────────
+This session focused on making the app production-ready: fixing auth flows,
+publishing the local agent to npm, fixing tool execution pipeline, and
+adding multi-user agent isolation.
+
+═══════════════════════════════════════════════════════════════════════════════
+
+PHASE 1: READ ENTIRE CODEBASE
+──────────────────────────────
+- Read all ~200+ source files across the entire monorepo
+- Generated complete summaries of every module:
+  • brain/ (17 files) — 14 neural nodes + bus/memory/config
+  • src/ (17 files) — React frontend pages + components
+  • local-agent/ (5 files) — 36-tool WebSocket agent
+  • apps/inventor-studio/ (70+ files) — ASI invention engine
+  • apps/businesses/ (47 files) — Business growth analysis
+  • docker/ (3 files) — Docker compose + Caddy + Cloudflare tunnel
+  • Root server.js, routes, services, models
+
+═══════════════════════════════════════════════════════════════════════════════
+
+PHASE 2: HOME PAGE AS DEFAULT (NOT LOGIN)
+─────────────────────────────────────────
+Problem: App showed login page on open. User wanted home page first.
+
+Changes:
+1. src/App.tsx
+   - Moved Home route outside <ProtectedRoute> so it's publicly accessible
+   - Added /signup route
+   - Import Signup page
+
+2. src/pages/Home.tsx
+   - Added Login + Sign Up buttons in top-right corner (fixed position)
+   - Shows Logout button when user is logged in
+   - Uses useAuth() hook to check auth state
+
+3. src/pages/Signup.tsx (NEW)
+   - Created signup page with email, password, confirm password
+   - Matches Login page design (dark theme, AB logo)
+   - Links to Login page and vice versa
+
+4. src/context/AuthContext.tsx
+   - Added signup() method to auth context
+   - Wires to authApi.signup()
+
+5. src/pages/Login.tsx
+   - Added "Don't have an account? Sign up" link
+
+═══════════════════════════════════════════════════════════════════════════════
+
+PHASE 3: MONGODB & AUTH FIXES
+──────────────────────────────
+Problem: Signup failed — MongoDB model name collision + login route broken.
+
+Changes:
+1. apps/businesses/models/User.js
+   - Renamed mongoose model from 'User' to 'BizUser'
+   - Fixed OverwriteModelError collision with main app's User model
+   - Both models were registering 'User' on the default mongoose connection
+
+2. routes/auth.js
+   - Fixed POST /login backward-compat alias
+   - Old code: req.url = '/login/password' + next() — didn't re-route
+   - New code: full inline handler that duplicates the password login logic
+   - Login now works at both /api/auth/login and /api/auth/login/password
+
+3. Verified MongoDB Atlas connection:
+   - MONGODB_URI → ClusterAutoPilotWallet → businesses database
+   - sentiance_db user with readWriteAnyDatabase
+   - Admin auto-seeded on boot: dr.sanjayanbu@gmail.com
+
+═══════════════════════════════════════════════════════════════════════════════
+
+PHASE 4: SINGLE SERVER MODE
+────────────────────────────
+Problem: User wanted frontend + backend on single server.js (port 8095).
+
+Solution: Already supported — just needed:
+1. npx vite build → compiles React to dist/
+2. node server.js → serves dist/ + API on port 8095
+3. No need for npm run dev (which starts Vite separately on 5173)
+
+═══════════════════════════════════════════════════════════════════════════════
+
+PHASE 5: LOCAL AGENT WIDGET UPDATES
+────────────────────────────────────
+Problem: Home page showed Python agent commands (pip install, python agent.py)
+
+Changes:
+1. src/pages/Home.tsx
+   - Updated agent instructions from Python to Node.js
+   - Changed to: npx brain-agent --url ws://localhost:8095/agent-ws --token TOKEN
+   - Made URL dynamic: auto-detects ws/wss and current hostname
+   - Auto-fills user's actual token instead of placeholder
+   - Made widget visible to all users (not just admin)
+
+2. src/pages/Chat.tsx
+   - Same updates: Python → npx brain-agent with dynamic URL/token
+
+═══════════════════════════════════════════════════════════════════════════════
+
+PHASE 6: PUBLISHED brain-agent TO NPM
+──────────────────────────────────────
+Problem: Users can't access local-agent/ folder on cPanel server.
+
+Solution: Published the local agent as an npm package.
+
+Changes:
+1. local-agent/package.json
+   - name: "brain-agent"
+   - version: 3.0.0
+   - bin: { "brain-agent": "agent.js" }
+   - Added description, keywords, author, license, repository
+
+2. local-agent/.npmignore (NEW)
+   - Excludes node_modules, .env, *.log
+
+3. Published to npmjs.com:
+   - npm login (sanjayanbu account)
+   - Enabled 2FA (authenticator app)
+   - npm publish --access public --otp CODE
+   - Package live at: https://www.npmjs.com/package/brain-agent
+
+Users can now connect with:
+   npx brain-agent --url wss://yourdomain.com/agent-ws --token THEIR_TOKEN
+
+═══════════════════════════════════════════════════════════════════════════════
+
+PHASE 7: AGENT STATUS & WORKING DIRECTORY ENDPOINTS
+────────────────────────────────────────────────────
+Problem: Chat page showed "Not connected" always, workdir Set/Clear didn't work.
+
+Changes:
+1. server.js — Added new API endpoints (BEFORE static/SPA fallback):
+   - GET /api/agent/status → { connected: true/false }
+   - GET /api/workdir → { ok: true, workdir: "..." }
+   - POST /api/workdir → sets current working directory
+
+2. Endpoint ordering fix:
+   - Moved agent/workdir routes BEFORE app.get('*') SPA fallback
+   - SPA fallback was catching /api/* requests and returning 404
+
+═══════════════════════════════════════════════════════════════════════════════
+
+PHASE 8: TOOL EXECUTION PIPELINE (MAJOR FIX)
+─────────────────────────────────────────────
+Problem: Brain generated TOOL: blocks but never executed them.
+
+Root causes found and fixed:
+
+1. Broca system prompt (brain/broca.js)
+   - Old: Generic "you have tools" — LLM guessed wrong names like "touch"
+   - New: Full list of all 37 tool names with argument signatures
+   - Added rules: one tool per action, treat number-words as names
+   - Added examples for create_file, delete_folder, bash
+
+2. Tool extraction regex (routes/chat.js)
+   - Old: /TOOL:\s*(\{[\s\S]*?\})/g — non-greedy, stopped at first }
+   - This broke on nested JSON: {"tool":"x","args":{"path":"y"}}
+   - New: extractJsonBlock() — balanced brace parser that correctly
+     handles nested objects
+
+3. Tool execution wiring (routes/chat.js)
+   - Added: import { sendToolCall } from '../services/agentBridge.js'
+   - After extracting tool calls, now executes them via the agent
+   - Results appended to reply as friendly messages
+
+4. Circular import fix
+   - server.js imports chat.js, chat.js needed sendToolCall from server.js
+   - Created services/agentBridge.js as indirection shim
+   - server.js calls setSendToolCall(sendToolCall) to wire the bridge
+   - chat.js imports from agentBridge.js — no circular dependency
+
+5. Working directory context injection
+   - Chat route now injects workdir path into the LLM message
+   - LLM uses correct absolute paths instead of guessing /Users/user/
+
+═══════════════════════════════════════════════════════════════════════════════
+
+PHASE 9: FRIENDLY TOOL RESULT MESSAGES
+───────────────────────────────────────
+Problem: Tool results showed raw JSON like:
+  [create_folder] Done: {"path":"C:\\Users\\..."}
+
+Changes (routes/chat.js):
+- Added per-tool friendly message formatting:
+  • create_folder → "Folder created successfully at C:\..."
+  • create_file → "File created successfully at C:\... (N bytes)"
+  • delete_file → "File deleted successfully: C:\..."
+  • read_file → "File contents:\n..."
+  • list_directory → "path (N items):\n 📁 folder\n 📄 file"
+  • bash/run_command → shows stdout
+  • search_code → "Found N matches:\n file:line — content"
+  • get_system_info → "OS: win32, CPU: ..., RAM: .../... MB"
+  • list → shows full tool table
+  • Errors → "Failed to [tool name]: error message"
+
+═══════════════════════════════════════════════════════════════════════════════
+
+PHASE 10: DEDUPLICATION & LLM GUARDRAILS
+─────────────────────────────────────────
+Problem: "create two folder" created the same folder twice.
+
+Changes:
+1. routes/chat.js
+   - Added deduplication: identical tool calls are filtered with Set
+   - Only unique tool calls execute
+
+2. brain/broca.js — System prompt rules:
+   - "Output exactly ONE TOOL call per action"
+   - "Treat words like 'three', 'five' as names, NOT quantities"
+   - "'delete three folder' means delete folder NAMED 'three'"
+
+═══════════════════════════════════════════════════════════════════════════════
+
+PHASE 11: NEW "list" TOOL
+──────────────────────────
+Added a meta tool that lists all 37 tools in a formatted table.
+
+Changes:
+1. local-agent/tools.js
+   - Added TOOL_DESCRIPTIONS object with category + description per tool
+   - Added list() function that returns formatted table string
+   - Added to TOOL_MAP
+
+2. routes/chat.js
+   - Added friendly handler for list tool results
+
+3. brain/broca.js
+   - Added "META: list()" to system prompt tool list
+
+═══════════════════════════════════════════════════════════════════════════════
+
+PHASE 12: IMPROVED move_file / move_folder
+───────────────────────────────────────────
+Problem: "move kitty to kitty 2" failed with EPERM when kitty 2 existed.
+
+Changes (local-agent/tools.js):
+- move_file now checks if destination is an existing directory
+- If yes: moves source INSIDE the destination (kitty 2/kitty/)
+- If no: creates parent dirs and renames as before
+
+═══════════════════════════════════════════════════════════════════════════════
+
+PHASE 13: CONNECT BUTTON ON HOME PAGE
+──────────────────────────────────────
+Problem: Raw token/command display was confusing for users.
+
+Changes (src/pages/Home.tsx):
+- Replaced token display + instructions with a single "Connect" button
+- Click → copies full npx command to clipboard
+- Shows "Copied! Paste in your terminal" for 3 seconds
+- When agent is connected: button turns green "Connected" (disabled)
+- Small helper text: "Requires Node.js 18+. Click Connect..."
+- Widget visible to ALL users (signed up or not)
+
+═══════════════════════════════════════════════════════════════════════════════
+
+PHASE 14: MULTI-USER AGENT ISOLATION
+─────────────────────────────────────
+Problem: All users' tool calls routed to the same agent (no isolation).
+
+Changes:
+1. server.js — sendToolCall()
+   - Now accepts a token parameter
+   - Looks up agent by token first: agentConnections.get(token)
+   - Falls back to any available agent if no token match
+   - Each user's browser token maps to their specific agent connection
+
+2. server.js — GET /api/agent/status
+   - Accepts ?token= query param
+   - Returns connection status for that specific token's agent
+
+3. services/agentBridge.js
+   - Updated to pass token through to server.js
+
+4. routes/chat.js
+   - Passes the user's token from the chat request to sendToolCall
+
+5. src/pages/Chat.tsx
+   - Polls agent status with token: /api/agent/status?token=TOKEN
+
+How it works:
+- Every browser generates a unique random token (localStorage)
+- User connects agent with: npx brain-agent --token THEIR_TOKEN
+- Server maps: token → WebSocket connection
+- Chat route sends tool calls to the agent matching the user's token
+- User A's tools never go to User B's agent
+- Works for both signed-up and anonymous users
+
+═══════════════════════════════════════════════════════════════════════════════
+
+FILES CREATED THIS SESSION
+───────────────────────────
+1. src/pages/Signup.tsx — Signup page
+2. services/agentBridge.js — Agent bridge (anti-circular-import shim)
+3. local-agent/.npmignore — npm publish ignore rules
+
+FILES MODIFIED THIS SESSION
+────────────────────────────
+1.  src/App.tsx — Public home route, signup route
+2.  src/pages/Home.tsx — Auth buttons, agent widget, connect button
+3.  src/pages/Login.tsx — Signup link
+4.  src/pages/Chat.tsx — Agent instructions, status polling with token
+5.  src/context/AuthContext.tsx — Added signup method
+6.  brain/broca.js — Full tool list in system prompt, LLM guardrails
+7.  routes/auth.js — Fixed /login alias
+8.  routes/chat.js — Tool extraction, execution, friendly results, dedup
+9.  server.js — Agent/workdir endpoints, token-based routing, bridge wiring
+10. services/agentBridge.js — Token passthrough
+11. local-agent/package.json — npm publish metadata, version bump
+12. local-agent/tools.js — list tool, move_file fix
+13. apps/businesses/models/User.js — BizUser rename (model collision fix)
+
+NPM PACKAGE PUBLISHED
+──────────────────────
+Package: brain-agent@3.0.0
+Registry: https://www.npmjs.com/package/brain-agent
+Author: sanjayanbu
+Files: agent.js, tools.js, permissions.js, undo.js, package.json (32.4 KB)
+
+═══════════════════════════════════════════════════════════════════════════════
+
+ARCHITECTURE STATE AT END OF SESSION
+─────────────────────────────────────
+
+Single server (node server.js) on port 8095:
+├── React SPA (dist/) — Home, Chat, NeuralMap, Robot, Memory, Config
+├── /api/auth/* — JWT auth (signup, login, pattern, biometric, API keys)
+├── /api/brain/* — Brain state, memory, knowledge graph, config
+├── /api/chat — Main chat with tool extraction + agent execution
+├── /api/sim/* — MuJoCo simulator proxy
+├── /api/llm/* — LLM provider status/probe
+├── /api/agent/status — Per-token agent connection check
+├── /api/workdir — Working directory get/set
+├── /businesses/api/* — Business growth sub-app
+├── /inventor-studio/api/* — Inventor Studio sub-app
+├── /ws — WebSocket (brain state push to browsers)
+└── /agent-ws — WebSocket (tool routing to local agents, keyed by token)
+
+Tool execution flow:
+User message → POST /api/chat → Broca LLM → TOOL: extraction →
+sendToolCall(tool, args, true, token) → agent WebSocket →
+local agent executes → result → friendly message → response
+
+Multi-user isolation:
+Browser token (localStorage) → agent connection (Map<token, ws>) →
+tool calls routed by token → each user's agent is independent
+
+═══════════════════════════════════════════════════════════════════════════════

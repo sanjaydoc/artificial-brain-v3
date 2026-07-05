@@ -1,0 +1,1011 @@
+// Lite admin — stats + users + inventions. Replaces the original 3,608-line
+// AdminDashboard.jsx port. Covers the ~90% case: who signed up, what inventions
+// ran, who needs approval, who to delete. Heavy analytics / subscription editor
+// / agent config panels from the source are deferred.
+import { useEffect, useState, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
+import {
+  Users, Lightbulb, CheckCircle, CreditCard, Search, Trash2, ShieldCheck,
+  ArrowLeft, RefreshCw, Filter, AlertTriangle, Loader, X, Save, Plus, Star, Award, Crown, Zap,
+  Brain, ToggleLeft, ToggleRight, Lock, Fingerprint, Key,
+} from 'lucide-react'
+import { useAuth } from '@/context/AuthContext'
+import { api } from '@/lib/api'
+
+interface Stats {
+  totalUsers: number
+  totalInventions: number
+  completeInventions: number
+  paidSubscriptions: number
+}
+
+interface AdminUser {
+  id: string
+  email: string
+  role: 'User' | 'Admin'
+  approvalStatus?: 'pending' | 'approved' | 'rejected'
+  subscriptionTier?: string
+  createdAt?: string
+  patternEnabled?: boolean
+  biometricEnabled?: boolean
+}
+
+interface AdminInvention {
+  id: string
+  seedConcept: string
+  domain: string
+  mode: string
+  status: string
+  isGuest?: boolean
+  userId?: string | null
+  createdAt: string
+  totalElapsedMs?: number
+}
+
+interface TierSetting {
+  id: string
+  tier: 'tier1' | 'tier2' | 'tier3'
+  name: string
+  priceInr: number
+  inventionLimit: number
+  features: string[]
+  isActive: boolean
+}
+
+const adminApi = {
+  stats: () => api.get<Stats>('/admin/stats').then((r) => r.data),
+  listUsers: (search?: string) =>
+    api
+      .get<{ users: AdminUser[] }>('/admin/users', { params: { search } })
+      .then((r) => r.data.users),
+  approveUser: (id: string) => api.post(`/admin/users/${id}/approve`),
+  deleteUser: (id: string) => api.delete(`/admin/users/${id}`),
+  setUserSubscription: (id: string, tier: string, months: number) =>
+    api.post<{ ok: true; user: AdminUser }>(`/admin/users/${id}/subscription`, { tier, months }),
+  listInventions: (status?: string) =>
+    api
+      .get<{ inventions: AdminInvention[] }>('/admin/inventions', { params: { status } })
+      .then((r) => r.data.inventions),
+  deleteInvention: (id: string) => api.delete(`/admin/inventions/${id}`),
+  listTiers: () =>
+    api.get<{ settings: TierSetting[] }>('/admin/subscription-settings').then((r) => r.data.settings),
+  updateTier: (
+    tier: string,
+    body: Partial<Pick<TierSetting, 'priceInr' | 'name' | 'features' | 'inventionLimit' | 'isActive'>>,
+  ) =>
+    api
+      .put<{ setting: TierSetting }>(`/admin/subscription-settings/${tier}`, body)
+      .then((r) => r.data.setting),
+  getAgentConfig: () =>
+    api.get<{ enabled: string[]; all: string[] }>('/admin/agent-config').then((r) => r.data),
+  setAgentConfig: (enabled: string[]) =>
+    api.put<{ enabled: string[]; all: string[] }>('/admin/agent-config', { enabled }).then((r) => r.data),
+}
+
+const AGENT_LABELS: Record<string, { label: string; color: string; tagline: string }> = {
+  analogical:    { label: 'Analogical',     color: '#34d399', tagline: 'Find structurally similar problems already solved elsewhere' },
+  inversion:     { label: 'Inversion',      color: '#f87171', tagline: 'Solve the opposite of the problem; flip assumptions' },
+  crossDomain:   { label: 'Cross-Domain',   color: '#00d4ff', tagline: 'Borrow ideas from unrelated fields (biology → engineering, etc.)' },
+  extreme:       { label: 'Extreme',        color: '#fb923c', tagline: 'Push constraints to extremes — what works at 1000x or 0.001x?' },
+  historical:    { label: 'Historical',     color: '#facc15', tagline: 'Resurrect or remix discarded solutions from history' },
+  biomimicry:    { label: 'Biomimicry',     color: '#a3e635', tagline: 'Copy strategies evolved by nature over billions of years' },
+  combinatorial: { label: 'Combinatorial',  color: '#f472b6', tagline: 'Combine known building blocks in novel arrangements' },
+  reduction:     { label: 'Reduction',      color: '#38bdf8', tagline: 'Strip away assumed components — what is truly essential?' },
+  scaling:       { label: 'Scaling',        color: '#818cf8', tagline: 'How does the solution change at very small / large scales?' },
+  future:        { label: 'Future-Back',    color: '#a78bfa', tagline: 'Imagine the 2050 ideal, work backwards to current tech' },
+}
+
+const TIER_META: Record<string, { label: string; icon: any; color: string }> = {
+  free: { label: 'Free', icon: Star, color: '#888' },
+  tier1: { label: 'Explorer', icon: Award, color: '#3b82f6' },
+  tier2: { label: 'Innovator', icon: Crown, color: '#00d4ff' },
+  tier3: { label: 'Visionary', icon: Zap, color: '#a78bfa' },
+}
+
+const STATUS_COLORS: Record<string, string> = {
+  pending: 'chip-gray',
+  starting: 'chip-cyan',
+  searching: 'chip-cyan',
+  reading: 'chip-cyan',
+  dreaming: 'chip-gold',
+  synthesizing: 'chip-gold',
+  critiquing: 'chip-gold',
+  generating_mvp: 'chip-gold',
+  generating_canvas: 'chip-gold',
+  complete: 'chip-green',
+  error: 'chip-red',
+}
+
+export default function AdminDashboard() {
+  const navigate = useNavigate()
+  const { user } = useAuth()
+
+  const [stats, setStats] = useState<Stats | null>(null)
+  const [users, setUsers] = useState<AdminUser[]>([])
+  const [inventions, setInventions] = useState<AdminInvention[]>([])
+  const [tiers, setTiers] = useState<TierSetting[]>([])
+  const [agentConfig, setAgentConfigState] = useState<{ enabled: string[]; all: string[] }>({
+    enabled: [],
+    all: [],
+  })
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [tab, setTab] = useState<'users' | 'inventions' | 'subscriptions' | 'agents'>('users')
+  const [editingUserSub, setEditingUserSub] = useState<AdminUser | null>(null)
+
+  const refresh = useCallback(async () => {
+    setError('')
+    setLoading(true)
+    try {
+      const [s, u, i, t, a] = await Promise.all([
+        adminApi.stats(),
+        adminApi.listUsers(search || undefined),
+        adminApi.listInventions(statusFilter || undefined),
+        adminApi.listTiers().catch(() => []),
+        adminApi.getAgentConfig().catch(() => ({ enabled: [], all: [] })),
+      ])
+      setStats(s)
+      setUsers(u)
+      setInventions(i)
+      setTiers(t)
+      setAgentConfigState(a)
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to load admin data')
+    } finally {
+      setLoading(false)
+    }
+  }, [search, statusFilter])
+
+  useEffect(() => {
+    refresh()
+  }, [refresh])
+
+  const handleApprove = async (id: string) => {
+    if (!window.confirm('Approve this user?')) return
+    try {
+      await adminApi.approveUser(id)
+      await refresh()
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Approve failed')
+    }
+  }
+
+  const handleDeleteUser = async (id: string, email: string) => {
+    if (!window.confirm(`Delete user "${email}"? This cannot be undone.`)) return
+    try {
+      await adminApi.deleteUser(id)
+      await refresh()
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Delete failed')
+    }
+  }
+
+  const handleDeleteInvention = async (id: string, concept: string) => {
+    if (!window.confirm(`Delete invention "${concept.slice(0, 50)}..."?`)) return
+    try {
+      await adminApi.deleteInvention(id)
+      await refresh()
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Delete failed')
+    }
+  }
+
+  if (!user?.isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--background)' }}>
+        <div className="glass-card p-8 text-center max-w-md">
+          <ShieldCheck className="w-10 h-10 text-red-400 mx-auto mb-3" />
+          <h1 className="font-head text-lg text-foreground mb-2">Admin only</h1>
+          <p className="text-sm text-muted-foreground mb-4">
+            You need an admin account to view this page.
+          </p>
+          <button onClick={() => navigate('/dashboard')} className="btn-primary text-sm">
+            Back to dashboard
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen" style={{ background: 'var(--background)' }}>
+      {/* ── Header ── */}
+      <div
+        className="border-b border-border sticky top-0 z-10"
+        style={{ background: 'rgba(8,8,12,0.95)', backdropFilter: 'blur(8px)' }}
+      >
+        <div className="max-w-7xl mx-auto px-4 md:px-6 h-14 flex items-center gap-3">
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="p-1.5 rounded-md hover:bg-muted text-muted-foreground"
+            aria-label="Back"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          <h1 className="font-head text-base font-bold text-foreground flex-1">
+            Admin <span className="text-muted-foreground font-normal">· Lite</span>
+          </h1>
+          <button
+            onClick={refresh}
+            className="text-xs flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-muted hover:bg-accent text-foreground/80 transition-colors"
+            disabled={loading}
+          >
+            {loading ? <Loader className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 space-y-6">
+        {/* ── Error banner ── */}
+        {error && (
+          <div className="flex items-start gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-sm">
+            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {/* ── Stats cards ── */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <StatCard
+            icon={<Users className="w-4 h-4" />}
+            label="Users"
+            value={stats?.totalUsers ?? '—'}
+            tone="cyan"
+          />
+          <StatCard
+            icon={<Lightbulb className="w-4 h-4" />}
+            label="Inventions"
+            value={stats?.totalInventions ?? '—'}
+            tone="gold"
+          />
+          <StatCard
+            icon={<CheckCircle className="w-4 h-4" />}
+            label="Complete"
+            value={stats?.completeInventions ?? '—'}
+            tone="green"
+          />
+          <StatCard
+            icon={<CreditCard className="w-4 h-4" />}
+            label="Paid subs"
+            value={stats?.paidSubscriptions ?? '—'}
+            tone="violet"
+          />
+        </div>
+
+        {/* ── Tabs ── */}
+        <div className="flex gap-1 border-b border-border">
+          <TabButton active={tab === 'users'} onClick={() => setTab('users')} count={users.length}>
+            Users
+          </TabButton>
+          <TabButton active={tab === 'inventions'} onClick={() => setTab('inventions')} count={inventions.length}>
+            Inventions
+          </TabButton>
+          <TabButton active={tab === 'subscriptions'} onClick={() => setTab('subscriptions')} count={tiers.length}>
+            Subscriptions
+          </TabButton>
+          <TabButton
+            active={tab === 'agents'}
+            onClick={() => setTab('agents')}
+            count={agentConfig.enabled.length}
+          >
+            Agents
+          </TabButton>
+        </div>
+
+        {/* ── Users panel ── */}
+        {tab === 'users' && (
+          <>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 relative max-w-md">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search by email..."
+                  className="input-field pl-9 text-sm py-2"
+                />
+              </div>
+              <span className="text-xs text-muted-foreground hidden md:inline">
+                {users.length} user{users.length === 1 ? '' : 's'}
+              </span>
+            </div>
+
+            <div className="glass-card overflow-x-auto">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Tier</th>
+                    <th>Approval</th>
+                    <th>Auth methods</th>
+                    <th>Joined</th>
+                    <th className="text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="text-center text-muted-foreground py-10 text-sm">
+                        {loading ? 'Loading...' : 'No users found'}
+                      </td>
+                    </tr>
+                  ) : (
+                    users.map((u) => (
+                      <tr key={u.id}>
+                        <td className="font-mono text-xs">{u.email}</td>
+                        <td>
+                          <span
+                            className={`chip ${u.role === 'Admin' ? 'chip-gold' : 'chip-gray'}`}
+                          >
+                            {u.role}
+                          </span>
+                        </td>
+                        <td>
+                          <span className="chip chip-cyan">{u.subscriptionTier || 'free'}</span>
+                        </td>
+                        <td>
+                          <ApprovalBadge status={u.approvalStatus} />
+                        </td>
+                        <td className="text-xs">
+                          <span className="text-muted-foreground">
+                            {u.patternEnabled && <Lock size={12} className="inline text-primary" />}
+                            {' '}
+                            {u.biometricEnabled && <Fingerprint size={12} className="inline text-primary" />}
+                            {' '}
+                            <Key size={12} className="inline text-muted-foreground" />
+                          </span>
+                        </td>
+                        <td className="text-xs text-muted-foreground">
+                          {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '—'}
+                        </td>
+                        <td className="text-right">
+                          <div className="inline-flex gap-1.5">
+                            {u.approvalStatus === 'pending' && (
+                              <button
+                                onClick={() => handleApprove(u.id)}
+                                className="px-2 py-1 rounded-md bg-green-500/15 text-green-400 hover:bg-green-500/25 text-xs flex items-center gap-1"
+                              >
+                                <CheckCircle className="w-3 h-3" /> Approve
+                              </button>
+                            )}
+                            <button
+                              onClick={() => setEditingUserSub(u)}
+                              className="px-2 py-1 rounded-md bg-amber-500/15 text-amber-400 hover:bg-amber-500/25 text-xs flex items-center gap-1"
+                              title="Set subscription"
+                            >
+                              <CreditCard className="w-3 h-3" /> Sub
+                            </button>
+                            <button
+                              onClick={() => handleDeleteUser(u.id, u.email)}
+                              className="px-2 py-1 rounded-md bg-red-500/15 text-red-400 hover:bg-red-500/25 text-xs flex items-center gap-1"
+                            >
+                              <Trash2 className="w-3 h-3" /> Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+
+        {/* ── Inventions panel ── */}
+        {tab === 'inventions' && (
+          <>
+            <div className="flex items-center gap-2">
+              <div className="relative max-w-xs">
+                <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="input-field pl-9 text-sm py-2 pr-8"
+                >
+                  <option value="">All statuses</option>
+                  <option value="complete">Complete</option>
+                  <option value="error">Error</option>
+                  <option value="pending">Pending</option>
+                  <option value="dreaming">Dreaming</option>
+                  <option value="synthesizing">Synthesizing</option>
+                  <option value="critiquing">Critiquing</option>
+                </select>
+              </div>
+              <span className="text-xs text-muted-foreground ml-auto">
+                {inventions.length} invention{inventions.length === 1 ? '' : 's'}
+              </span>
+            </div>
+
+            <div className="glass-card overflow-x-auto">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Seed concept</th>
+                    <th>Domain</th>
+                    <th>Mode</th>
+                    <th>Status</th>
+                    <th>Type</th>
+                    <th>Started</th>
+                    <th>Elapsed</th>
+                    <th className="text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {inventions.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="text-center text-muted-foreground py-10 text-sm">
+                        {loading ? 'Loading...' : 'No inventions found'}
+                      </td>
+                    </tr>
+                  ) : (
+                    inventions.map((inv) => (
+                      <tr key={inv.id}>
+                        <td className="text-xs max-w-md truncate" title={inv.seedConcept}>
+                          {inv.seedConcept}
+                        </td>
+                        <td>
+                          <span className="chip chip-gray">{inv.domain}</span>
+                        </td>
+                        <td className="text-xs text-muted-foreground">{inv.mode}</td>
+                        <td>
+                          <span className={`chip ${STATUS_COLORS[inv.status] || 'chip-gray'}`}>
+                            {inv.status}
+                          </span>
+                        </td>
+                        <td>
+                          {inv.isGuest ? (
+                            <span className="chip chip-cyan">guest</span>
+                          ) : (
+                            <span className="chip chip-gold">user</span>
+                          )}
+                        </td>
+                        <td className="text-xs text-muted-foreground">
+                          {new Date(inv.createdAt).toLocaleString()}
+                        </td>
+                        <td className="text-xs text-muted-foreground">
+                          {inv.totalElapsedMs ? `${Math.round(inv.totalElapsedMs / 1000)}s` : '—'}
+                        </td>
+                        <td className="text-right">
+                          <button
+                            onClick={() => handleDeleteInvention(inv.id, inv.seedConcept)}
+                            className="px-2 py-1 rounded-md bg-red-500/15 text-red-400 hover:bg-red-500/25 text-xs flex items-center gap-1"
+                          >
+                            <Trash2 className="w-3 h-3" /> Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+
+        {/* ── Subscriptions panel ── */}
+        {tab === 'subscriptions' && (
+          <SubscriptionsPanel tiers={tiers} onChange={refresh} setError={setError} />
+        )}
+
+        {/* ── Agents panel ── */}
+        {tab === 'agents' && (
+          <AgentsPanel
+            config={agentConfig}
+            onChange={async (next) => {
+              try {
+                const updated = await adminApi.setAgentConfig(next)
+                setAgentConfigState(updated)
+              } catch (err: any) {
+                setError(err.response?.data?.message || 'Failed to update agent config')
+              }
+            }}
+          />
+        )}
+
+        <p className="text-xs text-muted-foreground text-center pt-4">
+          v3 admin · {users.length} users · {inventions.length} inventions · {tiers.length} tiers
+        </p>
+      </div>
+
+      {/* ── User-subscription modal ── */}
+      {editingUserSub && (
+        <SetUserSubModal
+          user={editingUserSub}
+          tiers={tiers}
+          onClose={() => setEditingUserSub(null)}
+          onSaved={async () => {
+            setEditingUserSub(null)
+            await refresh()
+          }}
+          setError={setError}
+        />
+      )}
+    </div>
+  )
+}
+
+// ── Subscriptions tab — edit tier prices, names, features ───────────────────
+function SubscriptionsPanel({
+  tiers,
+  onChange,
+  setError,
+}: {
+  tiers: TierSetting[]
+  onChange: () => Promise<void>
+  setError: (s: string) => void
+}) {
+  if (tiers.length === 0) {
+    return (
+      <div className="glass-card p-6 text-center text-sm text-muted-foreground">
+        No tiers found. Restart the server — `seedSubscriptionSettings()` runs on boot and creates
+        the 3 default tiers.
+      </div>
+    )
+  }
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {tiers.map((t) => (
+        <TierEditorCard key={t.id} tier={t} onSaved={onChange} setError={setError} />
+      ))}
+    </div>
+  )
+}
+
+function TierEditorCard({
+  tier,
+  onSaved,
+  setError,
+}: {
+  tier: TierSetting
+  onSaved: () => Promise<void>
+  setError: (s: string) => void
+}) {
+  const meta = TIER_META[tier.tier] || TIER_META.tier1
+  const Icon = meta.icon
+  const [editing, setEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [draft, setDraft] = useState({
+    name: tier.name,
+    priceInr: tier.priceInr,
+    inventionLimit: tier.inventionLimit,
+    features: tier.features.join('\n'),
+    isActive: tier.isActive,
+  })
+
+  const save = async () => {
+    setSaving(true)
+    try {
+      await adminApi.updateTier(tier.tier, {
+        name: draft.name,
+        priceInr: Number(draft.priceInr) || 0,
+        inventionLimit: Number(draft.inventionLimit) || 0,
+        features: draft.features
+          .split('\n')
+          .map((s) => s.trim())
+          .filter(Boolean),
+        isActive: draft.isActive,
+      })
+      setEditing(false)
+      await onSaved()
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to update tier')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div
+      className="glass-card p-5 border-l-2"
+      style={{ borderLeftColor: meta.color }}
+    >
+      <div className="flex items-center gap-2 mb-3">
+        <Icon className="w-4 h-4" style={{ color: meta.color }} />
+        <span className="text-xs uppercase tracking-wider font-semibold" style={{ color: meta.color }}>
+          {tier.tier} — {meta.label}
+        </span>
+        {!tier.isActive && <span className="ml-auto chip chip-gray text-xs">disabled</span>}
+      </div>
+
+      {editing ? (
+        <div className="space-y-2.5">
+          <Field label="Display name">
+            <input
+              type="text"
+              value={draft.name}
+              onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+              className="input-field text-sm py-1.5"
+            />
+          </Field>
+          <Field label="Price (INR / month)">
+            <input
+              type="number"
+              min={0}
+              value={draft.priceInr}
+              onChange={(e) => setDraft({ ...draft, priceInr: parseInt(e.target.value, 10) || 0 })}
+              className="input-field text-sm py-1.5"
+            />
+          </Field>
+          <Field label="Invention limit per month (0 = unlimited)">
+            <input
+              type="number"
+              min={0}
+              value={draft.inventionLimit}
+              onChange={(e) =>
+                setDraft({ ...draft, inventionLimit: parseInt(e.target.value, 10) || 0 })
+              }
+              className="input-field text-sm py-1.5"
+            />
+          </Field>
+          <Field label="Features (one per line)">
+            <textarea
+              value={draft.features}
+              onChange={(e) => setDraft({ ...draft, features: e.target.value })}
+              rows={6}
+              className="input-field text-sm py-1.5"
+            />
+          </Field>
+          <label className="flex items-center gap-2 text-xs text-muted-foreground">
+            <input
+              type="checkbox"
+              checked={draft.isActive}
+              onChange={(e) => setDraft({ ...draft, isActive: e.target.checked })}
+            />
+            Active (shown on /pricing)
+          </label>
+          <div className="flex gap-2 pt-2">
+            <button
+              onClick={save}
+              disabled={saving}
+              className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1.5 flex-1"
+            >
+              {saving ? <Loader className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+              Save
+            </button>
+            <button
+              onClick={() => {
+                setEditing(false)
+                setDraft({
+                  name: tier.name,
+                  priceInr: tier.priceInr,
+                  inventionLimit: tier.inventionLimit,
+                  features: tier.features.join('\n'),
+                  isActive: tier.isActive,
+                })
+              }}
+              className="btn-ghost text-xs py-1.5 px-3"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+          <h3 className="font-head text-xl text-foreground font-bold mt-1">{tier.name}</h3>
+          <p className="font-head text-2xl font-bold mt-2" style={{ color: meta.color }}>
+            ₹{tier.priceInr.toLocaleString('en-IN')}
+            <span className="text-xs text-muted-foreground ml-1 font-normal">/ month</span>
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {tier.inventionLimit === 0 ? 'Unlimited inventions' : `${tier.inventionLimit} inventions / month`}
+          </p>
+          <ul className="mt-3 space-y-1">
+            {tier.features.map((f, i) => (
+              <li key={i} className="flex items-start gap-1.5 text-xs text-foreground/80">
+                <CheckCircle className="w-3 h-3 mt-0.5 shrink-0" style={{ color: meta.color }} />
+                {f}
+              </li>
+            ))}
+          </ul>
+          <button
+            onClick={() => setEditing(true)}
+            className="btn-secondary text-xs py-1.5 px-3 mt-4 w-full flex items-center justify-center gap-1.5"
+          >
+            <Plus className="w-3.5 h-3.5" /> Edit price / features
+          </button>
+        </>
+      )}
+    </div>
+  )
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="block text-xs uppercase tracking-wider text-muted-foreground mb-1 font-semibold">{label}</label>
+      {children}
+    </div>
+  )
+}
+
+// ── Modal: assign a subscription tier to a specific user ────────────────────
+function SetUserSubModal({
+  user,
+  tiers,
+  onClose,
+  onSaved,
+  setError,
+}: {
+  user: AdminUser
+  tiers: TierSetting[]
+  onClose: () => void
+  onSaved: () => Promise<void>
+  setError: (s: string) => void
+}) {
+  const [selected, setSelected] = useState<string>(user.subscriptionTier || 'free')
+  const [months, setMonths] = useState(1)
+  const [saving, setSaving] = useState(false)
+
+  const submit = async () => {
+    setSaving(true)
+    try {
+      await adminApi.setUserSubscription(user.id, selected, months)
+      await onSaved()
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to set subscription')
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }}
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="glass-card p-5 max-w-md w-full"
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-head text-base font-bold text-foreground">Set subscription</h2>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <p className="text-xs text-muted-foreground mb-4">
+          User: <span className="text-amber-300 font-mono">{user.email}</span>
+          <br />
+          Current: <span className="chip chip-gray text-xs">{user.subscriptionTier || 'free'}</span>
+        </p>
+
+        <Field label="Tier">
+          <div className="grid grid-cols-2 gap-2 mt-1">
+            {(['free', 'tier1', 'tier2', 'tier3'] as const).map((t) => {
+              const meta = TIER_META[t]
+              const Icon = meta.icon
+              const tierConfig = tiers.find((x) => x.tier === t)
+              const price = t === 'free' ? 0 : tierConfig?.priceInr || 0
+              const active = selected === t
+              return (
+                <button
+                  key={t}
+                  onClick={() => setSelected(t)}
+                  className={`p-2.5 rounded-xl border text-left transition-colors ${
+                    active ? 'border-primary bg-primary/5' : 'border-border hover:border-border'
+                  }`}
+                >
+                  <div className="flex items-center gap-1.5">
+                    <Icon className="w-3.5 h-3.5" style={{ color: meta.color }} />
+                    <span className="text-sm font-bold" style={{ color: meta.color }}>{meta.label}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {t === 'free' ? 'Free' : `₹${price.toLocaleString('en-IN')} / mo`}
+                  </p>
+                </button>
+              )
+            })}
+          </div>
+        </Field>
+
+        {selected !== 'free' && (
+          <div className="mt-3">
+            <Field label="Duration (months)">
+              <input
+                type="number"
+                min={1}
+                max={120}
+                value={months}
+                onChange={(e) => setMonths(Math.max(1, Math.min(120, parseInt(e.target.value, 10) || 1)))}
+                className="input-field text-sm py-1.5"
+              />
+            </Field>
+          </div>
+        )}
+
+        <div className="flex gap-2 mt-5">
+          <button
+            onClick={submit}
+            disabled={saving}
+            className="btn-primary text-sm py-2 px-4 flex items-center justify-center gap-1.5 flex-1"
+          >
+            {saving ? <Loader className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            Apply
+          </button>
+          <button onClick={onClose} className="btn-ghost text-sm py-2 px-4">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function StatCard({
+  icon,
+  label,
+  value,
+  tone,
+}: {
+  icon: React.ReactNode
+  label: string
+  value: number | string
+  tone: 'cyan' | 'gold' | 'green' | 'violet'
+}) {
+  const toneCls: Record<string, string> = {
+    cyan: 'text-cyan-400 border-cyan-500/20',
+    gold: 'text-primary border-primary/20',
+    green: 'text-green-400 border-green-500/20',
+    violet: 'text-violet-400 border-violet-500/20',
+  }
+  return (
+    <div className={`glass-card p-4 border-l-2 ${toneCls[tone].split(' ')[1]}`}>
+      <div className={`flex items-center gap-1.5 ${toneCls[tone].split(' ')[0]}`}>
+        {icon}
+        <span className="text-xs uppercase font-semibold tracking-wider">{label}</span>
+      </div>
+      <p className="text-foreground font-head text-2xl font-bold mt-1">{value}</p>
+    </div>
+  )
+}
+
+function TabButton({
+  children,
+  active,
+  onClick,
+  count,
+}: {
+  children: React.ReactNode
+  active: boolean
+  onClick: () => void
+  count?: number
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`px-4 py-2 text-sm font-head font-semibold border-b-2 transition-colors ${
+        active
+          ? 'border-primary text-primary'
+          : 'border-transparent text-muted-foreground hover:text-foreground/80'
+      }`}
+    >
+      {children}
+      {typeof count === 'number' && (
+        <span className="ml-1.5 text-xs text-muted-foreground font-normal">({count})</span>
+      )}
+    </button>
+  )
+}
+
+function ApprovalBadge({ status }: { status?: string }) {
+  if (status === 'approved' || !status)
+    return <span className="chip chip-green">approved</span>
+  if (status === 'pending') return <span className="chip chip-gold">pending</span>
+  if (status === 'rejected') return <span className="chip chip-red">rejected</span>
+  return <span className="chip chip-gray">{status}</span>
+}
+
+// ── Agents tab — toggle individual dream lenses on/off ──────────────────────
+function AgentsPanel({
+  config,
+  onChange,
+}: {
+  config: { enabled: string[]; all: string[] }
+  onChange: (next: string[]) => Promise<void>
+}) {
+  const enabledSet = new Set(config.enabled)
+  const total = config.all.length
+  const active = config.enabled.length
+
+  const toggle = async (name: string) => {
+    const next = enabledSet.has(name)
+      ? config.enabled.filter((n) => n !== name)
+      : [...config.enabled, name]
+    if (next.length === 0) {
+      // Don't let user disable everything — backend would 400 anyway
+      alert('At least one agent must stay enabled.')
+      return
+    }
+    await onChange(next)
+  }
+
+  const enableAll = () => onChange([...config.all])
+  const disableAllExceptOne = () => onChange([config.all[0] || 'analogical'])
+
+  if (config.all.length === 0) {
+    return (
+      <div className="glass-card p-6 text-center text-sm text-muted-foreground">
+        Loading agent config…
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="glass-card p-4 flex items-center gap-3">
+        <Brain className="w-5 h-5 text-primary shrink-0" />
+        <div className="flex-1">
+          <p className="text-sm text-foreground font-bold font-head">Dream agent control</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Disable lenses to make the dream pipeline run faster + cheaper. {active}/{total} active.
+            Disabled lenses are skipped during the dream phase but everything else (search, critique, MVP gen) runs as normal.
+          </p>
+        </div>
+        <button onClick={enableAll} className="btn-secondary text-xs py-1.5 px-3">
+          Enable all
+        </button>
+        <button onClick={disableAllExceptOne} className="btn-ghost text-xs py-1.5 px-3">
+          Min (1 only)
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {config.all.map((name) => {
+          const meta = AGENT_LABELS[name] || { label: name, color: '#888', tagline: '' }
+          const on = enabledSet.has(name)
+          return (
+            <button
+              key={name}
+              onClick={() => toggle(name)}
+              className="glass-card p-4 text-left transition-colors hover:border-border"
+              style={{ borderLeft: `2px solid ${on ? meta.color : 'var(--border)'}` }}
+            >
+              <div className="flex items-start gap-3">
+                <div
+                  className="w-9 h-9 rounded-lg shrink-0 flex items-center justify-center"
+                  style={{
+                    background: on ? `${meta.color}15` : 'var(--muted)',
+                    border: `1px solid ${on ? meta.color + '50' : 'var(--border)'}`,
+                  }}
+                >
+                  <span style={{ color: on ? meta.color : '#444', fontWeight: 800, fontSize: 14 }}>
+                    {meta.label.charAt(0)}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <p
+                      className="font-head font-bold text-sm"
+                      style={{ color: on ? '#fff' : '#666' }}
+                    >
+                      {meta.label}
+                    </p>
+                    {on ? (
+                      <ToggleRight className="w-5 h-5" style={{ color: meta.color }} />
+                    ) : (
+                      <ToggleLeft className="w-5 h-5 text-gray-700" />
+                    )}
+                  </div>
+                  <p className="text-xs leading-relaxed" style={{ color: on ? '#aaa' : '#444' }}>
+                    {meta.tagline}
+                  </p>
+                </div>
+              </div>
+            </button>
+          )
+        })}
+      </div>
+
+      <p className="text-xs text-muted-foreground text-center">
+        Changes apply to <em>future</em> dream runs immediately. Already-running pipelines are unaffected.
+      </p>
+    </div>
+  )
+}
