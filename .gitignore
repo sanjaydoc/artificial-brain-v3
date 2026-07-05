@@ -1,4 +1,17 @@
 node_modules
+
+# Environment files (never commit real secrets)
 .env
+.env.*
+!.env.example
 apps/businesses/.env
 apps/inventor-studio/.env
+docker/.env
+
+# Secrets / credentials — must never be committed
+credentials-keys-files/
+*.credentials.txt
+*credentials*.txt
+
+# Build tooling
+tsconfig.tsbuildinfo
