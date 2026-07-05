@@ -1,5 +1,7 @@
 # Artificial Brain v3
 
+**Author: Dr. Sanjay Anbu**
+
 A full-stack, brain-inspired AI platform: a Node.js/Express backend with modular
 "brain region" services (prefrontal, hippocampus, amygdala, cerebellum, and more),
 an LLM router with multi-tier fallback (OpenRouter → NVIDIA → Ollama), a Neo4j
